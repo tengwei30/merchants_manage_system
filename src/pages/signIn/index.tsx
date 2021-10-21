@@ -40,7 +40,7 @@ const SignIn = () => {
    const redirectToDashboard = () => {
     const auth = isAuth()
     if (auth) {
-      return <Redirect to="/admin/dashboard" />
+      return <Redirect to="/home" />
     }
   }
 
@@ -80,6 +80,7 @@ const SignIn = () => {
 
   return (
     <div className="login-root">
+      { showError() }
       { redirectToDashboard() }
       { signForm() }
     </div>
