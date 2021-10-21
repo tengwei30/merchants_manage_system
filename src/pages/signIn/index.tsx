@@ -1,7 +1,13 @@
 
-import { Form, Input, Button } from 'antd'
+import { Form, Input, Button, Result } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
+import { SigninPayload, signin } from '../../store/actions/auth.actions';
+import { AppState } from "../../store/reduces";
+import { AuthState } from "../../store/reduces/auth.reducer";
+import { isAuth } from '../../helpers/auth';
+import { Redirect } from "react-router";
+
 import './index.css'
 
 const SignIn = () => {
@@ -10,10 +16,33 @@ const SignIn = () => {
   const dispatch = useDispatch()
 
   // 登录完成
-  const onFinish = () => {}
+  const onFinish = (value: SigninPayload) => {
+    console.log('value', value)
+    dispatch(signin(value))
+  }
+  // 获取登录结果
+  const auth = useSelector<AppState, AuthState>(state => state.auth)
 
-  // 登录成功。跳转
-  const redirectToDashboard = () => {}
+   // 登录失败,显示错误信息
+   const showError = () => {
+    if (auth.signin.loaded && !auth.signin.success) {
+      return (
+        <Result
+          status="warning"
+          title="登录失败"
+          subTitle={auth.signin.message}
+        />
+      )
+    }
+  }
+
+   // 登录成功。跳转
+   const redirectToDashboard = () => {
+    const auth = isAuth()
+    if (auth) {
+      return <Redirect to="/admin/dashboard" />
+    }
+  }
 
   // 登录form 表单
   const signForm = () => {
@@ -25,7 +54,7 @@ const SignIn = () => {
       onFinish={onFinish}
       >
       <Form.Item
-        name="username"
+        name="phone"
         rules={[{ required: true, message: 'Please input your Username!' }]}
       >
         <Input prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Username" />
@@ -40,12 +69,6 @@ const SignIn = () => {
           placeholder="Password"
         />
       </Form.Item>
-      {/* <Form.Item>
-        <Form.Item name="remember" valuePropName="checked" noStyle>
-          <Checkbox>Remember me</Checkbox>
-        </Form.Item>
-      </Form.Item> */}
-  
       <Form.Item>
         <Button type="primary" htmlType="submit" className="login-form-button">
           Log in
