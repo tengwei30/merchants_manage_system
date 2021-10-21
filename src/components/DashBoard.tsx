@@ -34,14 +34,14 @@ const LayoutMenu: FC<Props> = ({ children }) => {
         >
           <SubMenu key="sub1" icon={<UserOutlined />} title="商品管理">
             <Menu.Item key="1">
-              <Link to="/publish">我要卖</Link>
+              <Link to="/good/publish">我要卖</Link>
             </Menu.Item>
-            <Menu.Item key="2">出售中的商品</Menu.Item>
-            <Menu.Item key="3">仓库中的商品</Menu.Item>
-            <Menu.Item key="4">违规商品列表</Menu.Item>
+            <Menu.Item key="2"><Link to="/good/sale">出售中的商品</Link></Menu.Item>
+            <Menu.Item key="3"><Link to="/good/illegal">仓库中的商品</Link></Menu.Item>
+            <Menu.Item key="4"><Link to="/good/warehouse">违规商品列表</Link></Menu.Item>
           </SubMenu>
           <SubMenu key="sub2" icon={<LaptopOutlined />} title="店铺管理">
-            <Menu.Item key="5">品牌授权</Menu.Item>
+            <Menu.Item key="5"><Link to="/shops/brand">品牌授权</Link></Menu.Item>
           </SubMenu>
         </Menu>
       </Sider>

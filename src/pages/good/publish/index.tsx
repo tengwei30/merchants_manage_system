@@ -1,4 +1,4 @@
-import LayoutMenu from '../../components/DashBoard'
+import LayoutMenu from '../../../components/DashBoard'
 
 const Publish = () => {
   return (
