@@ -1,7 +1,7 @@
 module.exports = {
   parser: '@typescript-eslint/parser',
   extends: ['plugin:react/recommended', 'plugin:prettier/recommended'], //使用推荐的React代码检测规范
-  plugins: ['@typescript-eslint'],
+  plugins: ['react', 'react-hooks', '@typescript-eslint/eslint-plugin', 'prettier'],
   env: {
     browser: true,
     node: true
@@ -21,5 +21,9 @@ module.exports = {
       jsx: true
     }
   },
-  rules: {}
+  rules: {
+    'prettier/prettier': 'error',
+    'react/jsx-uses-react': 'off',
+    'react/react-in-jsx-scope': 'off'
+  }
 };

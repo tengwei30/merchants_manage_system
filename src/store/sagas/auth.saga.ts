@@ -1,7 +1,7 @@
-import { takeEvery,put } from 'redux-saga/effects'
+import { takeEvery, put } from 'redux-saga/effects'
 // import axios from 'axios'
 // import { API } from '../../config'
-import { SIGNIN, SigninAction, signinSuccess} from "../actions/auth.actions";
+import { SIGNIN, SigninAction, signinSuccess } from '../actions/auth.actions'
 
 // 登录
 function* hanldeSigin(action: SigninAction): any {
@@ -9,7 +9,7 @@ function* hanldeSigin(action: SigninAction): any {
     // let response = yield axios.post(`${API}/signin`,  action.payload)
     let response = yield action.payload
     console.log('response', response)
-    
+
     localStorage.setItem('token', JSON.stringify(response))
     yield put(signinSuccess())
   } catch (error) {
@@ -18,10 +18,7 @@ function* hanldeSigin(action: SigninAction): any {
   }
 }
 
-
-export default function* authSage () {
-  
+export default function* authSage() {
   // 登录
   yield takeEvery(SIGNIN, hanldeSigin)
 }
-

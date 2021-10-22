@@ -1,27 +1,29 @@
-import { useState } from 'react';
-import { Form, Row, Col, Input, Button, Cascader } from 'antd';
+import { useState } from 'react'
+import { Form, Row, Col, Input, Button, Cascader } from 'antd'
 // import { DownOutlined, UpOutlined } from '@ant-design/icons';
 
-const options = [{
-  value: '一级类目',
-  label: '一级类目',
-  children: [
-    {
-      value: '二级类目',
-      label: '二级类目',
-      children: [
-        {
-          value: '三级类目',
-          label: '三级类目',
-        },
-      ],
-    },
-  ],
-}]
+const options = [
+  {
+    value: '一级类目',
+    label: '一级类目',
+    children: [
+      {
+        value: '二级类目',
+        label: '二级类目',
+        children: [
+          {
+            value: '三级类目',
+            label: '三级类目'
+          }
+        ]
+      }
+    ]
+  }
+]
 
 const SearchForm = () => {
   // const [expand, setExpand] = useState(false);
-  const [form] = Form.useForm();
+  const [form] = Form.useForm()
   // const [options] = useState([{
   //   value: '一级类目',
   //   label: '一级类目',
@@ -38,13 +40,13 @@ const SearchForm = () => {
   //     },
   //   ],
   // }])
-  const onChange = (value:any):void => {
+  const onChange = (value: any): void => {
     console.log(value)
   }
 
   const onFinish = (values: any) => {
-    console.log('Received values of form: ', values);
-  };
+    console.log('Received values of form: ', values)
+  }
 
   return (
     <Form
@@ -55,18 +57,12 @@ const SearchForm = () => {
     >
       <Row gutter={24}>
         <Col span={6}>
-          <Form.Item
-              name="商品名称"
-              label="商品名称"
-            >
-              <Input placeholder="请输入商品名称" />
-            </Form.Item>
+          <Form.Item name="商品名称" label="商品名称">
+            <Input placeholder="请输入商品名称" />
+          </Form.Item>
         </Col>
         <Col span={6}>
-          <Form.Item
-            name="类目选择"
-            label="类目选择"
-          >
+          <Form.Item name="类目选择" label="类目选择">
             <Cascader options={options} onChange={onChange} placeholder="Please select" />
           </Form.Item>
         </Col>
@@ -79,7 +75,9 @@ const SearchForm = () => {
             >
               <Input placeholder="请输入价格" />
             </Form.Item>
-            <Form.Item style={{ display: 'inline-block', paddingLeft:'15px', width: 'calc(10% - 8px)' }}>
+            <Form.Item
+              style={{ display: 'inline-block', paddingLeft: '15px', width: 'calc(10% - 8px)' }}
+            >
               到
             </Form.Item>
             <Form.Item
@@ -112,7 +110,9 @@ const SearchForm = () => {
             >
               <Input placeholder="请输入销量" />
             </Form.Item>
-            <Form.Item style={{ display: 'inline-block', paddingLeft:'15x', width: 'calc(10% - 8px)' }}>
+            <Form.Item
+              style={{ display: 'inline-block', paddingLeft: '15x', width: 'calc(10% - 8px)' }}
+            >
               到
             </Form.Item>
             <Form.Item
@@ -131,7 +131,7 @@ const SearchForm = () => {
           <Button
             style={{ margin: '0 8px' }}
             onClick={() => {
-              form.resetFields();
+              form.resetFields()
             }}
           >
             清除
@@ -140,7 +140,6 @@ const SearchForm = () => {
         {/* </Col> */}
       </Row>
     </Form>
-
   )
 }
 

@@ -2,9 +2,9 @@ import { applyMiddleware, createStore } from 'redux'
 import { createHashHistory } from 'history'
 import createRootReducer from './reduces'
 import { routerMiddleware } from 'connected-react-router'
-import { composeWithDevTools } from "redux-devtools-extension"
+import { composeWithDevTools } from 'redux-devtools-extension'
 import createSagaMiddleware from 'redux-saga'
-import rootSaga from "./sagas";
+import rootSaga from './sagas'
 
 export const history = createHashHistory()
 
@@ -17,4 +17,4 @@ const store = createStore(
 
 sagaMiddleware.run(rootSaga)
 
-export default store;
+export default store

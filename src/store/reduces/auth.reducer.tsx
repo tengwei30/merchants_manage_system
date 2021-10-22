@@ -1,9 +1,9 @@
-import { AuthUnionType } from '../actions/auth.actions';
+import { AuthUnionType } from '../actions/auth.actions'
 
 export interface AuthState {
   signin: {
-    loaded: boolean,
-    success: boolean,
+    loaded: boolean
+    success: boolean
     message: string
   }
 }
@@ -16,7 +16,7 @@ const initState = {
   }
 }
 
-export default function authReducer (state:AuthState = initState, action:AuthUnionType) {
+export default function authReducer(state: AuthState = initState, action: AuthUnionType) {
   switch (action.type) {
     case 'SIGNIN':
       return {

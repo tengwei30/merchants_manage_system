@@ -1,11 +1,11 @@
 export interface User {
-  phone: string,
-  _id: string,
-  name: string,
+  phone: string
+  _id: string
+  name: string
   role: number
 }
 
 export interface Token {
-  token: string,
+  token: string
   user: User
 }
