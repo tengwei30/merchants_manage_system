@@ -1,9 +1,14 @@
+import { Divider } from 'antd'
 import LayoutMenu from '../../../components/DashBoard'
+import SearchForm from '../sale/components/Form'
+import List from '../sale/components/List'
 
 const Sale = () => {
   return (
     <LayoutMenu>
-      <div>出售中商品</div>
+      <SearchForm />
+      <Divider />
+      <List />
     </LayoutMenu>
   )
 }

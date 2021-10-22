@@ -8,7 +8,9 @@ function* hanldeSigin(action: SigninAction): any {
   try {
     // let response = yield axios.post(`${API}/signin`,  action.payload)
     let response = yield action.payload
-    localStorage.setItem('token', JSON.stringify(response.data))
+    console.log('response', response)
+    
+    localStorage.setItem('token', JSON.stringify(response))
     yield put(signinSuccess())
   } catch (error) {
     console.error('---->', error)
