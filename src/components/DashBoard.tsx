@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 
 import { withRouter, RouteComponentProps, useHistory } from 'react-router-dom'
 
-import { getMenu, slideBarConfig, getDefaultOpenKey } from '../helpers/routerConfig'
+import { menus, getDefaultOpenKey } from '../helpers/routerMethods'
 
 const { Header, Content, Sider } = Layout;
 
@@ -39,7 +39,7 @@ const LayoutMenu: FC<Props> = ({ children }) => {
           style={{ height: '100%', borderRight: 0 }}
         >
           {
-            getMenu(slideBarConfig)
+            menus
           }
         </Menu>
       </Sider>
