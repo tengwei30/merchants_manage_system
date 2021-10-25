@@ -6,15 +6,16 @@ import { withRouter, RouteComponentProps, useHistory } from 'react-router-dom'
 
 import { menus, getDefaultOpenKey } from '../helpers/routerMethods'
 
-const { Header, Content, Sider } = Layout;
+const { Header, Content, Sider } = Layout
 
 interface Props extends RouteComponentProps {
   children: React.ReactNode
 }
 
-
 const LayoutMenu: FC<Props> = ({ children }) => {
-  const { location: { pathname } } = useHistory()
+  const {
+    location: { pathname }
+  } = useHistory()
   const defaultOpenKey = getDefaultOpenKey(pathname)
   return (
     <Layout>
@@ -34,9 +35,7 @@ const LayoutMenu: FC<Props> = ({ children }) => {
           selectedKeys={[pathname]}
           style={{ height: '100%', borderRight: 0 }}
         >
-          {
-            menus
-          }
+          {menus}
         </Menu>
       </Sider>
       <Layout style={{ padding: '0 24px 24px' }}>
@@ -49,7 +48,7 @@ const LayoutMenu: FC<Props> = ({ children }) => {
             background: '#fff'
           }}
         >
-          { children }
+          {children}
         </Content>
       </Layout>
     </Layout>
