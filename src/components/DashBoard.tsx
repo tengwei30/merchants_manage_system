@@ -27,29 +27,31 @@ const LayoutMenu: FC<Props> = ({ children }) => {
           </Menu.Item>
         </Menu>
       </Header>
-      <Sider width={200} trigger={null} className="site-layout-background">
-        <Menu
-          mode="inline"
-          defaultSelectedKeys={['1']}
-          defaultOpenKeys={[defaultOpenKey]}
-          selectedKeys={[pathname]}
-          style={{ height: '100%', borderRight: 0 }}
-        >
-          {menus}
-        </Menu>
-      </Sider>
-      <Layout style={{ padding: '0 24px 24px' }}>
-        <Content
-          className="site-layout-background"
-          style={{
-            padding: 24,
-            margin: 0,
-            minHeight: 280,
-            background: '#fff'
-          }}
-        >
-          {children}
-        </Content>
+      <Layout>
+        <Sider width={200} trigger={null} className="site-layout-background">
+          <Menu
+            mode="inline"
+            defaultSelectedKeys={['1']}
+            defaultOpenKeys={[defaultOpenKey]}
+            selectedKeys={[pathname]}
+            style={{ height: '100%', borderRight: 0 }}
+          >
+            {menus}
+          </Menu>
+        </Sider>
+        <Layout style={{ padding: '0 24px 24px' }}>
+          <Content
+            className="site-layout-background"
+            style={{
+              padding: 24,
+              margin: 0,
+              minHeight: 280,
+              background: '#fff'
+            }}
+          >
+            {children}
+          </Content>
+        </Layout>
       </Layout>
     </Layout>
   )
