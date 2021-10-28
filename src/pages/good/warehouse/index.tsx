@@ -1,9 +1,11 @@
 import LayoutMenu from '../../../components/DashBoard'
-
+import Form from '../warehouse/components/Form'
+import List from '../warehouse/components/List'
 const WareHouse = () => {
   return (
     <LayoutMenu>
-      <div>仓库中商品</div>
+      <Form />
+      <List />
     </LayoutMenu>
   )
 }

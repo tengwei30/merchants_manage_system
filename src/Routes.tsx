@@ -8,6 +8,7 @@ import Sale from './pages/good/sale/index'
 import WareHouse from './pages/good/warehouse/index'
 import Brand from './pages/shops/brand/index'
 import Illegal from './pages/good/illegal'
+import AddGood from './pages/good/add-good'
 
 const Routes = () => {
   return (
@@ -19,6 +20,7 @@ const Routes = () => {
         <PrivateRoute path="/good/sale" component={Sale} />
         <PrivateRoute path="/good/illegal" component={Illegal} />
         <PrivateRoute path="/good/warehouse" component={WareHouse} />
+        <PrivateRoute path="/good/add-good" component={AddGood} />
         <PrivateRoute path="/shops/brand" component={Brand} />
       </Switch>
     </HashRouter>
