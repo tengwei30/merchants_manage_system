@@ -1,4 +1,14 @@
-
+.basic{
+  border: 1px solid #f0f0f0;
+}
+.basic h2{
+  font-size: 15px;
+  background-color: #f2f4f5;
+  padding: 6px;
+}
+.basic .body{
+  padding: 10px;
+}
 .login-root {
   width: 300px;
   position: fixed;;

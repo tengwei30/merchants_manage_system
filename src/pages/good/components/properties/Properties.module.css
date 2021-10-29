@@ -1,0 +1,31 @@
+.basic{
+}
+.basic .content{
+  padding: 10px;
+}
+.basic h2{
+  margin: 0;
+}
+.item{
+  line-height: 30px;
+  border-bottom:solid 1px #E6E6E6;
+}
+.item-content{
+  padding: 15px 10px;
+  border-left:solid 1px #E6E6E6;
+}
+.txt-tip{
+  color: #BBB;
+}
+.label{
+  padding: 15px 6px;
+  text-align: right;
+}
+.dot{
+  color: red;
+  padding-right: 6px;
+}
+.txt-foot{
+  line-height:30px;
+  padding-left:10px;
+}
