@@ -1,6 +1,6 @@
 import { useState, useRef, forwardRef, useImperativeHandle } from 'react'
-import { Form, Row, Col, Input, Button, Select, Upload, message, Modal } from 'antd'
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons'
+import { Form, Row, Col, Input, Button, Select, Upload, message, Modal, Space } from 'antd'
+import { LoadingOutlined, PlusOutlined, MinusCircleOutlined } from '@ant-design/icons'
 import BraftEditor from 'braft-editor'
 import 'braft-editor/dist/index.css'
 import styles from '../components/Form.module.css'
@@ -46,7 +46,7 @@ const GoodForm = (props: any, ref: any) => {
   const [editorState, setEditorState] = useState(BraftEditor.createEditorState('<p></p>'))
   const [sort, setSort] = useState('美妆>护肤品>官方直售')
   const [expressTemplate, setExpressTemplate] = useState('运费模版')
-  const [loading, setLoading] = useState(false)
+  // const [loading, setLoading] = useState(false)
   const [imageUrl, setImageUrl] = useState('')
   const [mainFile, setMainFile] = useState([]) //已上传的主图片
   const [files, setFiles] = useState([]) //已上传的图片列表
@@ -81,16 +81,18 @@ const GoodForm = (props: any, ref: any) => {
   //主图片上传
   const handleMainUploadChange = (info: any) => {
     if (info.file.status === 'uploading') {
-      setLoading(true)
+      // setLoading(true)
       return
     }
+    console.log(info.file)
     if (info.file.status === 'done') {
       // Get this url from response in real world.
-      getBase64(info.file.originFileObj, (imageUrl: string) => {
-        setLoading(false)
-        // setImageUrl(imageUrl)
-        setMainFile(info.fileList)
-      })
+      // getBase64(info.file.originFileObj, (imageUrl: string) => {
+      //   // setImageUrl(imageUrl)
+      // })
+      console.log(info.fileList)
+      // setLoading(false)
+      setMainFile(info.fileList)
     }
   }
   //非主图片上传
@@ -119,10 +121,73 @@ const GoodForm = (props: any, ref: any) => {
   }
   const uploadButton = (
     <div>
-      {loading ? <LoadingOutlined /> : <PlusOutlined />}
+      <PlusOutlined />
       <div style={{ marginTop: 8 }}>上传图片</div>
     </div>
   )
+  const skuList = (form: any) => {
+    return (
+      <Row>
+        <Col span={24}>
+          <Form.Item label="颜色" style={{ background: '#f0f0f0', paddingTop: '24px' }}>
+            <Form.List name="colors">
+              {(fields, { add, remove }, { errors }) => (
+                <>
+                  {fields.map((field, index) => (
+                    <Space
+                      key={field.key}
+                      style={{
+                        width: '20%',
+                        display: 'fixed',
+                        marginBottom: 8,
+                        paddingRight: '30px'
+                      }}
+                      align="baseline"
+                    >
+                      <Form.Item {...field}>
+                        <Input />
+                      </Form.Item>
+                      <MinusCircleOutlined
+                        className="dynamic-delete-button"
+                        onClick={() => remove(field.name)}
+                      />
+                    </Space>
+                  ))}
+                  <Form.Item style={{ width: '30%', display: 'inline-block' }}>
+                    <Form.Item
+                      name="newColor"
+                      style={{ width: '40%', display: 'inline-block', marginRight: '10px' }}
+                    >
+                      <Input />
+                    </Form.Item>
+                    <Form.Item style={{ width: '25%', display: 'inline-block' }}>
+                      <Button
+                        type="primary"
+                        onClick={() => {
+                          console.log(form.getFieldValue('newColor'))
+                          add('new color')
+                          // form.setFieldsValue({ sights: [] });
+                        }}
+                        style={{ marginRight: '10px' }}
+                      >
+                        确定
+                      </Button>
+                    </Form.Item>
+                    <Form.Item style={{ width: '25%', display: 'inline-block' }}>
+                      <Button type="primary">取消</Button>
+                    </Form.Item>
+                  </Form.Item>
+                  {/* <Form.Item style={{ width: '20%', display: 'inline-block' }}>
+                    <Button onClick={() => add()}>+添加规格值</Button>
+                  </Form.Item> */}
+                </>
+              )}
+            </Form.List>
+          </Form.Item>
+        </Col>
+      </Row>
+    )
+  }
   return (
     <Form
       {...layout}
@@ -191,6 +256,7 @@ const GoodForm = (props: any, ref: any) => {
               </Form.Item>
             </Col>
           </Row>
+          {skuList(form)}
           <Row>
             <Col span={24}>
               <Form.Item
@@ -203,19 +269,14 @@ const GoodForm = (props: any, ref: any) => {
                   name="avatar-main"
                   listType="picture-card"
                   className="avatar-uploader"
-                  showUploadList={false}
-                  fileList={[...mainFile]}
+                  showUploadList={true}
+                  fileList={mainFile}
                   action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
                   beforeUpload={beforeUpload}
                   onPreview={handlePreview}
                   onChange={handleMainUploadChange}
                 >
-                  {/* {imageUrl ? (
-                    <img src={imageUrl} alt="avatar" style={{ width: '100%' }} />
-                  ) : (
-                    uploadButton
-                  )} */}
-                  {mainFile.length < 2 && '上传图片'}
+                  {mainFile.length >= 1 ? null : uploadButton}
                 </Upload>
                 {/* <Upload
                   name="avatar-other"
@@ -223,6 +284,7 @@ const GoodForm = (props: any, ref: any) => {
                   className="avatar-uploader"
                   multiple={true}
                   fileList={[...files]}
+                  // maxCount={10}
                   // showUploadList={false}
                   action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
                   beforeUpload={beforeUpload}
@@ -230,6 +292,7 @@ const GoodForm = (props: any, ref: any) => {
                   onChange={handleOtherUploadChange}
                 >
                   {uploadButton}
+                  {mainFile.length >= 10 ? null : uploadButton}
                 </Upload> */}
                 <Modal
                   visible={previewImg.previewVisible}
