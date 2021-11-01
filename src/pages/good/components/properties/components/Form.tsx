@@ -1,10 +1,66 @@
-import { useState, useRef, forwardRef, useImperativeHandle } from 'react'
-import { Form, Row, Col, Input, Button, Select, Upload, message, Modal, Space } from 'antd'
-import { LoadingOutlined, PlusOutlined, MinusCircleOutlined } from '@ant-design/icons'
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
+import {
+  Form,
+  Row,
+  Col,
+  Input,
+  Button,
+  Select,
+  Upload,
+  message,
+  Modal,
+  Space,
+  Avatar,
+  Typography
+} from 'antd'
+import {
+  LoadingOutlined,
+  PlusOutlined,
+  MinusCircleOutlined,
+  SmileOutlined,
+  UserOutlined
+} from '@ant-design/icons'
+import { FormInstance } from 'antd/lib/form'
 import BraftEditor from 'braft-editor'
 import 'braft-editor/dist/index.css'
 import styles from '../components/Form.module.css'
 // import { RSA_NO_PADDING } from 'constants'
+const data = [
+  {
+    creater: '',
+    id: 1,
+    name: '颜色',
+    sort: 0,
+    specColleId: 10,
+    type: 1,
+    updator: '',
+    value: [
+      {
+        id: 1,
+        specColleId: 10,
+        specId: 2,
+        value: '白色'
+      }
+    ]
+  },
+  {
+    creater: '',
+    id: 2,
+    name: '尺寸',
+    sort: 0,
+    specColleId: 12,
+    type: 1,
+    updator: '',
+    value: [
+      {
+        id: 2,
+        specColleId: 12,
+        specId: 3,
+        value: 'L'
+      }
+    ]
+  }
+]
 const { Option } = Select
 const layout = {
   labelCol: { span: 3 },
@@ -40,7 +96,52 @@ function beforeUpload(file: any) {
   }
   return isJpgOrPng && isLt2M
 }
+//sku相关
+interface SkuType {
+  skuValue: string
+}
+interface SkuFormProps {
+  visible: boolean
+  onCancel: () => void
+}
+// reset form fields when modal is form, closed
+const useResetFormOnCloseModal = ({ form, visible }: { form: FormInstance; visible: boolean }) => {
+  const prevVisibleRef = useRef<boolean>()
+  useEffect(() => {
+    prevVisibleRef.current = visible
+  }, [visible])
+  const prevVisible = prevVisibleRef.current
 
+  useEffect(() => {
+    if (!visible && prevVisible) {
+      form.resetFields()
+    }
+  }, [visible])
+}
+//添加sku值的form表单
+const SkuForm: React.FC<SkuFormProps> = ({ visible, onCancel }) => {
+  const [form] = Form.useForm()
+  useResetFormOnCloseModal({
+    form,
+    visible
+  })
+  const onOk = () => {
+    form.submit()
+  }
+  return (
+    <Modal title="Basic Drawer" visible={visible} onOk={onOk} onCancel={onCancel}>
+      <Form form={form} name="skuForm">
+        <Form.Item
+          name="skuValue"
+          style={{ width: '40%', display: 'inline-block', marginRight: '10px' }}
+        >
+          <Input />
+        </Form.Item>
+      </Form>
+    </Modal>
+  )
+}
+//基础form表单
 const GoodForm = (props: any, ref: any) => {
   // 设置编辑器初始内容
   const [editorState, setEditorState] = useState(BraftEditor.createEditorState('<p></p>'))
@@ -125,252 +226,78 @@ const GoodForm = (props: any, ref: any) => {
       <div style={{ marginTop: 8 }}>上传图片</div>
     </div>
   )
-  const skuList = (form: any) => {
-    return (
-      <Row>
-        <Col span={24}>
-          <Form.Item label="颜色" style={{ background: '#f0f0f0', paddingTop: '24px' }}>
-            <Form.List name="colors">
-              {(fields, { add, remove }, { errors }) => (
-                <>
-                  {fields.map((field, index) => (
-                    <Space
-                      key={field.key}
-                      style={{
-                        width: '20%',
-                        display: 'fixed',
-                        marginBottom: 8,
-                        paddingRight: '30px'
-                      }}
-                      align="baseline"
-                    >
-                      <Form.Item {...field}>
-                        <Input />
-                      </Form.Item>
-                      <MinusCircleOutlined
-                        className="dynamic-delete-button"
-                        onClick={() => remove(field.name)}
-                      />
-                    </Space>
-                  ))}
-                  <Form.Item style={{ width: '30%', display: 'inline-block' }}>
-                    <Form.Item
-                      name="newColor"
-                      style={{ width: '40%', display: 'inline-block', marginRight: '10px' }}
-                    >
-                      <Input />
-                    </Form.Item>
-                    <Form.Item style={{ width: '25%', display: 'inline-block' }}>
-                      <Button
-                        type="primary"
-                        onClick={() => {
-                          console.log(form.getFieldValue('newColor'))
-                          add('new color')
-                          // form.setFieldsValue({ sights: [] });
-                        }}
-                        style={{ marginRight: '10px' }}
-                      >
-                        确定
-                      </Button>
-                    </Form.Item>
-                    <Form.Item style={{ width: '25%', display: 'inline-block' }}>
-                      <Button type="primary">取消</Button>
-                    </Form.Item>
-                  </Form.Item>
-                  {/* <Form.Item style={{ width: '20%', display: 'inline-block' }}>
-                    <Button onClick={() => add()}>+添加规格值</Button>
-                  </Form.Item> */}
-                </>
-              )}
-            </Form.List>
-          </Form.Item>
-        </Col>
-      </Row>
-    )
+  //sku相关--start
+  const [skuFormVisible, setSkuFormVisible] = useState(false)
+
+  const showSkuForm = () => {
+    setSkuFormVisible(true)
   }
+
+  const hideSkuForm = () => {
+    setSkuFormVisible(false)
+  }
+  //sku相关--end
   return (
-    <Form
-      {...layout}
-      form={form}
-      name="control-hooks"
-      validateMessages={validateMessages}
-      onFinish={onFinish}
+    <Form.Provider
+      onFormFinish={(name, { values, forms }) => {
+        if (name === 'skuForm') {
+          console.log(name)
+          const { basicForm } = forms
+          const skus = basicForm.getFieldValue('skus') || []
+          basicForm.setFieldsValue({ skus: [...skus, values] })
+          // console.log(values)
+          // console.log(skus)
+          setSkuFormVisible(false)
+        }
+        if (name === 'basicForm') {
+          console.log('237')
+          console.log(values)
+        }
+      }}
     >
-      <div className={styles.basic}>
-        <h2>商品基本信息</h2>
-        <div className={styles.content}>
-          <Row>
-            <Col span={24}>
-              <Form.Item name="categoryId" label="商品分类">
-                {sort}
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row>
-            <Col span={24}>
-              <Form.Item
-                name="goodName"
-                label="商品名称"
-                rules={[{ required: true }]}
-                extra="商品标题名称长度至少3个字符，最长50个字符"
-              >
-                <Input maxLength={50} allowClear />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row>
-            <Col span={24}>
-              <Form.Item name="brandId" label="品牌">
-                <Select onChange={onBrandChange}>
-                  <Option value="1">欧莱雅</Option>
-                  <Option value="2">雅诗兰黛</Option>
-                  <Option value="3">兰蔻</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row>
-            <Col span={24}>
-              <Form.Item name="code" label="商家货号" rules={[{ required: true }]}>
-                <Input allowClear />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row>
-            <Col span={24}>
-              <Form.Item name="minPrice" label="最低价格">
-                <Input />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row>
-            <Col span={24}>
-              <Form.Item
-                name="goodPrice"
-                label="商品价格"
-                rules={[{ required: true }]}
-                extra="价格必须是0.01~9999999之间的数字，且不能高于市场价。 <br />
-                  此价格为商品实际销售价格，如果商品存在规格，该价格显示最低价格。"
-              >
-                <Input style={{ width: '20%' }} suffix="¥" />
-              </Form.Item>
-            </Col>
-          </Row>
-          {skuList(form)}
-          <Row>
-            <Col span={24}>
-              <Form.Item
-                name="picture"
-                label="商品图片"
-                rules={[{ required: true }]}
-                extra="上传商品默认主图，如多规格值时将默认使用该图或分规格上传各规格主图；支持jpg、gif、png格式上传或从图片空间中选择，建议使用尺寸800x800像素以上、大小不超过1M的正方形图片"
-              >
-                <Upload
-                  name="avatar-main"
-                  listType="picture-card"
-                  className="avatar-uploader"
-                  showUploadList={true}
-                  fileList={mainFile}
-                  action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
-                  beforeUpload={beforeUpload}
-                  onPreview={handlePreview}
-                  onChange={handleMainUploadChange}
-                >
-                  {mainFile.length >= 1 ? null : uploadButton}
-                </Upload>
-                {/* <Upload
-                  name="avatar-other"
-                  listType="picture-card"
-                  className="avatar-uploader"
-                  multiple={true}
-                  fileList={[...files]}
-                  // maxCount={10}
-                  // showUploadList={false}
-                  action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
-                  beforeUpload={beforeUpload}
-                  onPreview={handlePreview}
-                  onChange={handleOtherUploadChange}
-                >
-                  {uploadButton}
-                  {mainFile.length >= 10 ? null : uploadButton}
-                </Upload> */}
-                <Modal
-                  visible={previewImg.previewVisible}
-                  title={previewImg.previewTitle}
-                  footer={null}
-                  onCancel={handleModalCancel}
-                >
-                  <img alt="example" style={{ width: '100%' }} src={previewImg.previewImage} />
-                </Modal>
-              </Form.Item>
-            </Col>
-          </Row>
+      <Form
+        {...layout}
+        form={form}
+        name="basicForm"
+        validateMessages={validateMessages}
+        onFinish={onFinish}
+      >
+        <div className={styles.basic}>
+          <h2>商品基本信息</h2>
+          <div className={styles.content}>
+            <Form.Item label="颜色">
+              <Form.List name="skus">
+                {(fields, { add, remove }) => (
+                  <>
+                    {fields.map(({ key, name, fieldKey, ...restField }) => (
+                      <Space key={key} style={{ width: '12%', marginRight: 30 }} align="baseline">
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'skuValue']}
+                          fieldKey={[fieldKey, 'skuValue']}
+                        >
+                          <Input />
+                        </Form.Item>
+                        <MinusCircleOutlined onClick={() => remove(name)} />
+                      </Space>
+                    ))}
+                    <Form.Item style={{ width: '20%', display: 'inline-block' }}>
+                      <Button onClick={showSkuForm}>+添加规格值</Button>
+                    </Form.Item>
+                  </>
+                )}
+              </Form.List>
+            </Form.Item>
+          </div>
         </div>
-      </div>
-      <div className="basic">
-        <h2>商品详情</h2>
-        <div className="content">
-          <Row>
-            <Col span={24}>
-              <Form.Item name="title" label="商品描述" rules={[{ required: true }]}>
-                <div style={{ border: 'solid 1px #f0f0f0' }}>
-                  <BraftEditor
-                    excludeControls={['media']}
-                    contentStyle={{ height: 305 }}
-                    value={editorState}
-                    onChange={handleChange}
-                  />
-                </div>
-              </Form.Item>
-            </Col>
-          </Row>
-        </div>
-      </div>
-      <div className="basic">
-        <h2>商品物流信息</h2>
-        <div className="content">
-          <Row>
-            <Col span={24}>
-              <Form.Item name="expressTemplateId" label="运费">
-                <span>{expressTemplate}</span>
-                <Button>确定</Button>
-              </Form.Item>
-            </Col>
-          </Row>
-        </div>
-      </div>
-      <div className="basic">
-        <h2>页面SEO</h2>
-        <div className="">
-          <Row>
-            <Col span={24}>
-              <Form.Item name="title" label="SEO标题" rules={[{ required: true }]}>
-                <Input maxLength={50} allowClear />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row>
-            <Col span={24}>
-              <Form.Item name="keyword" label="SEO关键字" rules={[{ required: true }]}>
-                <Input maxLength={50} allowClear />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row>
-            <Col span={24}>
-              <Form.Item name="description" label="SEO描述" rules={[{ required: true }]}>
-                <Input maxLength={50} allowClear />
-              </Form.Item>
-            </Col>
-          </Row>
-        </div>
-      </div>
-      <Form.Item {...tailLayout}>
-        <Button type="primary" htmlType="submit">
-          确定
-        </Button>
-      </Form.Item>
-    </Form>
+        <Form.Item {...tailLayout}>
+          <Button type="primary" htmlType="submit">
+            确定
+          </Button>
+        </Form.Item>
+      </Form>
+      <SkuForm visible={skuFormVisible} onCancel={hideSkuForm} />
+    </Form.Provider>
   )
 }
 export default GoodForm
