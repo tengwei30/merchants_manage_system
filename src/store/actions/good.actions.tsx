@@ -1,18 +1,16 @@
 /**
  * 商品信息
  */
-export const SAVE_GOOD = 'SAVE_GOOD'
+export const SET_CATEGORY = 'SET_CATEGORY'
 
-export interface SaveGoodPayload {
-  name: string
-  price: number
+export interface SetCategoryAction {
+  type: typeof SET_CATEGORY
+  id: number
+  value: string
 }
-export interface SaveGoodAction {
-  type: typeof SAVE_GOOD
-  payload: SaveGoodPayload
-}
-export const saveGood = (payload: SaveGoodPayload): SaveGoodAction => ({
-  type: SAVE_GOOD,
-  payload
+export const setCategory = (id: number, value: string): SetCategoryAction => ({
+  type: SET_CATEGORY,
+  id,
+  value
 })
-export type GoodUnionType = SaveGoodAction
+export type GoodUnionType = SetCategoryAction

@@ -24,7 +24,6 @@ import { FormInstance } from 'antd/lib/form'
 import BraftEditor from 'braft-editor'
 import 'braft-editor/dist/index.css'
 import styles from '../components/Form.module.css'
-// import { RSA_NO_PADDING } from 'constants'
 const data = [
   {
     creater: '',
@@ -129,7 +128,7 @@ const SkuForm: React.FC<SkuFormProps> = ({ visible, onCancel }) => {
     form.submit()
   }
   return (
-    <Modal title="Basic Drawer" visible={visible} onOk={onOk} onCancel={onCancel}>
+    <Modal title="添加规格值" visible={visible} onOk={onOk} onCancel={onCancel}>
       <Form form={form} name="skuForm">
         <Form.Item
           name="skuValue"
@@ -142,7 +141,9 @@ const SkuForm: React.FC<SkuFormProps> = ({ visible, onCancel }) => {
   )
 }
 //基础form表单
-const GoodForm = (props: any, ref: any) => {
+const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
+  console.log(listSpec)
+  console.log('146')
   // 设置编辑器初始内容
   const [editorState, setEditorState] = useState(BraftEditor.createEditorState('<p></p>'))
   const [sort, setSort] = useState('美妆>护肤品>官方直售')
@@ -236,6 +237,48 @@ const GoodForm = (props: any, ref: any) => {
   const hideSkuForm = () => {
     setSkuFormVisible(false)
   }
+  //初始化数组表单数据
+  const initSpecListValue = () => {
+    let obj: any = {}
+    for (let i = 0; i < listSpec.length; i++) {
+      obj['spec' + listSpec[i].id] = listSpec[i]
+    }
+    return obj
+  }
+  const specListValue = (item: any) => {
+    return (
+      <Form.Item label={item.name}>
+        <Form.List name={'spec' + item.id}>
+          {(fields, { add, remove }) => (
+            <>
+              {fields.map(({ key, name, fieldKey, ...restField }) => (
+                <Space key={key} style={{ width: '12%', marginRight: 30 }} align="baseline">
+                  <Form.Item
+                    {...restField}
+                    name={[name, 'skuValue' + item.id]}
+                    fieldKey={[fieldKey, 'skuValue' + item.id]}
+                  >
+                    <Input />
+                  </Form.Item>
+                  <MinusCircleOutlined onClick={() => remove(name)} />
+                </Space>
+              ))}
+              <Form.Item style={{ width: '20%', display: 'inline-block' }}>
+                <Button onClick={showSkuForm}>+添加规格值</Button>
+              </Form.Item>
+            </>
+          )}
+        </Form.List>
+      </Form.Item>
+    )
+  }
+  const specList = () => {
+    let str = ''
+    for (let i = 0; i < listSpec.length; i++) {
+      str += specListValue(listSpec[i])
+    }
+    return str
+  }
   //sku相关--end
   return (
     <Form.Provider
@@ -259,13 +302,20 @@ const GoodForm = (props: any, ref: any) => {
         {...layout}
         form={form}
         name="basicForm"
+        // initialValues={{
+        //   skus: listSpec
+        // }}
+        initialValues={{
+          ...initSpecListValue
+        }}
         validateMessages={validateMessages}
         onFinish={onFinish}
       >
         <div className={styles.basic}>
           <h2>商品基本信息</h2>
           <div className={styles.content}>
-            <Form.Item label="颜色">
+            {specList()}
+            {/* <Form.Item label="颜色">
               <Form.List name="skus">
                 {(fields, { add, remove }) => (
                   <>
@@ -287,7 +337,7 @@ const GoodForm = (props: any, ref: any) => {
                   </>
                 )}
               </Form.List>
-            </Form.Item>
+            </Form.Item> */}
           </div>
         </div>
         <Form.Item {...tailLayout}>
