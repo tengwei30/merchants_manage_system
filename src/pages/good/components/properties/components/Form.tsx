@@ -96,9 +96,9 @@ function beforeUpload(file: any) {
   return isJpgOrPng && isLt2M
 }
 //sku相关
-interface SkuType {
-  skuValue: string
-}
+// interface SkuType {
+//   skuValue: string
+// }
 interface SkuFormProps {
   visible: boolean
   onCancel: () => void
@@ -142,8 +142,6 @@ const SkuForm: React.FC<SkuFormProps> = ({ visible, onCancel }) => {
 }
 //基础form表单
 const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
-  console.log(listSpec)
-  console.log('146')
   // 设置编辑器初始内容
   const [editorState, setEditorState] = useState(BraftEditor.createEditorState('<p></p>'))
   const [sort, setSort] = useState('美妆>护肤品>官方直售')
@@ -158,6 +156,7 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
     previewTitle: ''
   }) //图片预览
   // const [previewVisible, setPreviewVisible] = useState(false) //是否显示图片预览弹窗
+  const [specKey, setSpecKey] = useState(NaN) //当前操作的规格数组下标
   const [form] = Form.useForm()
   //表单提交方法
   const onFinish = (values: any) => {
@@ -230,66 +229,71 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
   //sku相关--start
   const [skuFormVisible, setSkuFormVisible] = useState(false)
 
-  const showSkuForm = () => {
+  const showSkuForm = (key: number) => {
+    setSpecKey(key) //保存当前操作的规格数组下标
     setSkuFormVisible(true)
   }
 
   const hideSkuForm = () => {
     setSkuFormVisible(false)
   }
-  //初始化数组表单数据
-  const initSpecListValue = () => {
-    let obj: any = {}
-    for (let i = 0; i < listSpec.length; i++) {
-      obj['spec' + listSpec[i].id] = listSpec[i]
-    }
-    return obj
-  }
-  const specListValue = (item: any) => {
+  //商品规格UI
+  const listSpecFormList = () => {
     return (
-      <Form.Item label={item.name}>
-        <Form.List name={'spec' + item.id}>
-          {(fields, { add, remove }) => (
-            <>
-              {fields.map(({ key, name, fieldKey, ...restField }) => (
-                <Space key={key} style={{ width: '12%', marginRight: 30 }} align="baseline">
-                  <Form.Item
-                    {...restField}
-                    name={[name, 'skuValue' + item.id]}
-                    fieldKey={[fieldKey, 'skuValue' + item.id]}
-                  >
-                    <Input />
-                  </Form.Item>
-                  <MinusCircleOutlined onClick={() => remove(name)} />
-                </Space>
-              ))}
-              <Form.Item style={{ width: '20%', display: 'inline-block' }}>
-                <Button onClick={showSkuForm}>+添加规格值</Button>
-              </Form.Item>
-            </>
-          )}
-        </Form.List>
-      </Form.Item>
+      <Form.List name={'listSpec'}>
+        {(fields) => (
+          <>
+            {fields.map((field) => (
+              <Space key={field.key} style={{ width: '100%', marginRight: 30 }} align="baseline">
+                <Form.Item label={listSpec[field.key].name}>
+                  <Form.List name={[field.name, 'value']}>
+                    {(subFields, { add, remove }) => (
+                      <>
+                        {subFields.map(({ key, name, fieldKey, ...restField }) => (
+                          <Space
+                            key={key}
+                            style={{ width: '13%', marginRight: 30 }}
+                            align="baseline"
+                          >
+                            <Form.Item
+                              {...restField}
+                              name={[name, 'value']}
+                              fieldKey={[fieldKey, 'value']}
+                            >
+                              <Input />
+                            </Form.Item>
+                            <MinusCircleOutlined onClick={() => remove(name)} />
+                          </Space>
+                        ))}
+                        <Form.Item style={{ width: '20%', display: 'inline-block' }}>
+                          <Button onClick={() => showSkuForm(field.key)}>+添加规格值</Button>
+                        </Form.Item>
+                      </>
+                    )}
+                  </Form.List>
+                </Form.Item>
+              </Space>
+            ))}
+          </>
+        )}
+      </Form.List>
     )
-  }
-  const specList = () => {
-    let str = ''
-    for (let i = 0; i < listSpec.length; i++) {
-      str += specListValue(listSpec[i])
-    }
-    return str
   }
   //sku相关--end
   return (
     <Form.Provider
       onFormFinish={(name, { values, forms }) => {
         if (name === 'skuForm') {
-          console.log(name)
-          const { basicForm } = forms
-          const skus = basicForm.getFieldValue('skus') || []
-          basicForm.setFieldsValue({ skus: [...skus, values] })
+          const { basicForm, skuForm } = forms
+          const listSpec = basicForm.getFieldValue('listSpec') || []
+          const sku = skuForm.getFieldValue('skuValue') || ''
+          console.log(sku)
+          const currentSpecValue = listSpec[specKey].value
+          console.log(currentSpecValue.push({ ...currentSpecValue[0], value: sku, id: '' }))
+          console.log(currentSpecValue)
+          console.log('292')
+          basicForm.setFieldsValue({ listSpec })
           // console.log(values)
-          // console.log(skus)
           setSkuFormVisible(false)
         }
         if (name === 'basicForm') {
@@ -302,11 +306,8 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
         {...layout}
         form={form}
         name="basicForm"
-        // initialValues={{
-        //   skus: listSpec
-        // }}
         initialValues={{
-          ...initSpecListValue
+          listSpec
         }}
         validateMessages={validateMessages}
         onFinish={onFinish}
@@ -314,7 +315,7 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
         <div className={styles.basic}>
           <h2>商品基本信息</h2>
           <div className={styles.content}>
-            {specList()}
+            <Form.Item style={{ width: '100%' }}>{listSpecFormList()}</Form.Item>
             {/* <Form.Item label="颜色">
               <Form.List name="skus">
                 {(fields, { add, remove }) => (
