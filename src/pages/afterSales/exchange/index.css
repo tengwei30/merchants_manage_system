@@ -1,0 +1,15 @@
+.ant-advanced-search-form {
+    padding: 20px !important;
+    background: #f5f4f4;
+    border: 1px solid #f5f4f4;
+    border-radius: 2px;
+}
+.mangeBtn{
+    padding-top:20px;
+}
+.mangeBtn .btn{
+    margin-right:10px;
+}
+.tableCon{
+    padding-top:20px;
+}
