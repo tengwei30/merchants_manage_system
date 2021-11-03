@@ -11,6 +11,8 @@ import DeliverySet from '../pages/order/deliverySet/index'
 import Comment from '../pages/order/comment/index'
 import Refund from '../pages/afterSales/refund/index'
 import Exchange from '../pages/afterSales/exchange/index'
+import AddGood from '../pages/good/add-good'
+
 export interface SlideItem {
   name: string
   icon?: React.ReactElement
@@ -53,6 +55,11 @@ export const slideBarConfig: SlideItem[] = [
         name: '违规商品列表',
         url: '/good/warehouse',
         component: WareHouse
+      },
+      {
+        name: '商品发布',
+        url: '/good/add-good',
+        component: AddGood
       }
     ]
   },

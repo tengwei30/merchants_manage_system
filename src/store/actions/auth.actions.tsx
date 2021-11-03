@@ -6,7 +6,7 @@ export const SIGNIN_SUCCESS = 'SIGNIN_SUCCESS'
 export const SIGNIN_FAIL = 'SIGNIN_FAIL'
 
 export interface SigninPayload {
-  email: string
+  loginName: string
   password: string
 }
 export interface SigninAction {
