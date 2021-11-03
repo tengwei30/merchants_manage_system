@@ -1,0 +1,11 @@
+.basic{
+  border:solid 1px #F5F5F5;
+}
+.basic .content{
+  padding: 10px;
+}
+.basic h2{
+  font-size: 16px;
+  padding: 5px 10px;
+  background-color: #E7E7E7;
+}

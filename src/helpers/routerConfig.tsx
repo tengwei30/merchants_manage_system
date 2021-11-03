@@ -5,6 +5,7 @@ import Sale from '../pages/good/sale/index'
 import WareHouse from '../pages/good/warehouse/index'
 import Brand from '../pages/shops/brand/index'
 import Illegal from '../pages/good/illegal'
+import AddGood from '../pages/good/add-good'
 
 export interface SlideItem {
   name: string
@@ -48,6 +49,11 @@ export const slideBarConfig: SlideItem[] = [
         name: '违规商品列表',
         url: '/good/warehouse',
         component: WareHouse
+      },
+      {
+        name: '商品发布',
+        url: '/good/add-good',
+        component: AddGood
       }
     ]
   },
