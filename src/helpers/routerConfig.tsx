@@ -47,12 +47,12 @@ export const slideBarConfig: SlideItem[] = [
         component: Sale
       },
       {
-        name: '仓库中的商品',
+        name: '违规商品列表',
         url: '/good/illegal',
         component: Illegal
       },
       {
-        name: '违规商品列表',
+        name: '仓库中的商品',
         url: '/good/warehouse',
         component: WareHouse
       },

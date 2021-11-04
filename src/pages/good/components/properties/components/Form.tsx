@@ -11,7 +11,8 @@ import {
   Modal,
   Space,
   Avatar,
-  Typography
+  Typography,
+  Table
 } from 'antd'
 import {
   LoadingOutlined,
@@ -279,6 +280,112 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
       </Form.List>
     )
   }
+  //库存量
+  interface SkuColumns {
+    name: string
+    id: number
+  }
+  //生成skuColumns
+  const getSkuColumns = () => {
+    let arr: object[] = []
+    listSpec.map((item: SkuColumns) => {
+      arr.push({
+        title: item.name,
+        dataIndex: item.name,
+        key: item.name
+      })
+    })
+    const subArr = [
+      {
+        title: '价格',
+        key: 'price'
+      },
+      {
+        title: '库存',
+        key: 'stock'
+      },
+      {
+        title: '库存预警',
+        key: 'alertStock'
+      },
+      {
+        title: '操作',
+        key: 'action',
+        render: (text: string, record: object) => (
+          <Space size="middle">
+            <a>上传图片</a>
+          </Space>
+        )
+      }
+    ]
+    arr.concat(subArr)
+    // console.log(arr)
+    return arr
+  }
+  const skuColumns = getSkuColumns()
+  let skuDataSource: object[] = []
+  // const fn = (data: any) => {
+  //   let totalArr: object[] = []
+  //   let arr: object[] = []
+  //   let frontStr: any = ''
+  //   for (let i = 0; i < data[0].value.length; i++) {
+  //     frontStr = data[0].value[i].value
+  //     for (let j = 0; j < data[1].value.length; j++) {
+  //       arr.push(frontStr)
+  //       arr.push(data[1].value[j].value)
+  //       totalArr.push(arr)
+  //       console.log(arr)
+  //       arr = []
+  //     }
+  //   }
+  //   return totalArr
+  // }
+  // // const ddd = fn(listSpec)
+  // // console.log(ddd)
+
+  let k = 0
+  let totalArr: object[] = []
+  let arr: object[] = []
+  let frontStr: any = []
+  const tailFn = (data: any) => {
+    if (k >= listSpec.length) {
+      return
+    }
+    if (k === listSpec.length - 1) {
+      for (let j = 0; j < data.value.length; j++) {
+        arr = arr.concat(frontStr)
+        arr.push(data.value[j])
+        totalArr.push(arr)
+        console.log(arr)
+        arr = []
+      }
+      return
+    }
+    for (let i = 0; i < data.value.length; i++) {
+      frontStr.push(data.value[i])
+      k += 1
+      tailFn(listSpec[k])
+    }
+  }
+  tailFn(listSpec[k])
+  console.log('372')
+  console.log(totalArr)
+  const getSkuDataSource = () => {
+    let arr: object[] = []
+    totalArr.map((item: any) => {
+      item.map((subItem: any, index: number) => {
+        arr.push({
+          key: index + 1,
+          name: subItem.value,
+          price: 1,
+          stock: 1,
+          alertStock: 1
+        })
+      })
+    })
+    return arr
+  }
+  skuDataSource = getSkuDataSource()
   //sku相关--end
   return (
     <Form.Provider
@@ -287,17 +394,17 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
           const { basicForm, skuForm } = forms
           const listSpec = basicForm.getFieldValue('listSpec') || []
           const sku = skuForm.getFieldValue('skuValue') || ''
-          console.log(sku)
+          // console.log(sku)
           const currentSpecValue = listSpec[specKey].value
-          console.log(currentSpecValue.push({ ...currentSpecValue[0], value: sku, id: '' }))
-          console.log(currentSpecValue)
-          console.log('292')
+          // console.log(currentSpecValue.push({ ...currentSpecValue[0], value: sku, id: '' }))
+          // console.log(currentSpecValue)
+          // console.log('292')
           basicForm.setFieldsValue({ listSpec })
           // console.log(values)
           setSkuFormVisible(false)
         }
         if (name === 'basicForm') {
-          console.log('237')
+          // console.log('237')
           console.log(values)
         }
       }}
@@ -316,29 +423,9 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
           <h2>商品基本信息</h2>
           <div className={styles.content}>
             <Form.Item style={{ width: '100%' }}>{listSpecFormList()}</Form.Item>
-            {/* <Form.Item label="颜色">
-              <Form.List name="skus">
-                {(fields, { add, remove }) => (
-                  <>
-                    {fields.map(({ key, name, fieldKey, ...restField }) => (
-                      <Space key={key} style={{ width: '12%', marginRight: 30 }} align="baseline">
-                        <Form.Item
-                          {...restField}
-                          name={[name, 'skuValue']}
-                          fieldKey={[fieldKey, 'skuValue']}
-                        >
-                          <Input />
-                        </Form.Item>
-                        <MinusCircleOutlined onClick={() => remove(name)} />
-                      </Space>
-                    ))}
-                    <Form.Item style={{ width: '20%', display: 'inline-block' }}>
-                      <Button onClick={showSkuForm}>+添加规格值</Button>
-                    </Form.Item>
-                  </>
-                )}
-              </Form.List>
-            </Form.Item> */}
+            <Form.Item label="库存配置">
+              <Table columns={skuColumns} dataSource={skuDataSource} />
+            </Form.Item>
           </div>
         </div>
         <Form.Item {...tailLayout}>

@@ -184,7 +184,7 @@ const Order = () => {
         <div className="tableCon">
           <Table
             rowSelection={{ type: 'checkbox', ...rowSelection }}
-            columns={columns}
+            // columns={columns}
             dataSource={data}
             bordered
           />
