@@ -29,14 +29,14 @@ const AddGood = () => {
         updator: '',
         value: [
           {
-            id: 200,
-            specColleId: 3,
+            id: 201,
+            specColleId: 1,
             specId: 2,
             value: '黑色'
           },
           {
-            id: 200,
-            specColleId: 3,
+            id: 202,
+            specColleId: 1,
             specId: 2,
             value: '红色'
           }
@@ -52,22 +52,51 @@ const AddGood = () => {
         updator: '',
         value: [
           {
-            id: 300,
-            specColleId: 3,
+            id: 301,
+            specColleId: 1,
             specId: 3,
             value: 'S'
           },
           {
-            id: 200,
-            specColleId: 3,
+            id: 302,
+            specColleId: 1,
             specId: 3,
             value: 'M'
           },
           {
-            id: 200,
-            specColleId: 3,
+            id: 303,
+            specColleId: 1,
             specId: 3,
             value: 'L'
+          }
+        ]
+      },
+      {
+        creater: '',
+        id: 4,
+        name: '内存',
+        sort: 0,
+        specColleId: 1,
+        type: 1,
+        updator: '',
+        value: [
+          {
+            id: 400,
+            specColleId: 1,
+            specId: 4,
+            value: '126G'
+          },
+          {
+            id: 401,
+            specColleId: 1,
+            specId: 4,
+            value: '256G'
+          },
+          {
+            id: 402,
+            specColleId: 1,
+            specId: 4,
+            value: '516G'
           }
         ]
       }

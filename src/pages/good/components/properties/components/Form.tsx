@@ -97,9 +97,6 @@ function beforeUpload(file: any) {
   return isJpgOrPng && isLt2M
 }
 //sku相关
-// interface SkuType {
-//   skuValue: string
-// }
 interface SkuFormProps {
   visible: boolean
   onCancel: () => void
@@ -158,6 +155,10 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
   }) //图片预览
   // const [previewVisible, setPreviewVisible] = useState(false) //是否显示图片预览弹窗
   const [specKey, setSpecKey] = useState(NaN) //当前操作的规格数组下标
+  // const [currentListSpec, setCurrentListSpec] = useState(listSpec) //当前商品规格集
+  // const [skuColumns, setSkuColumns] = useState([]) //当前sku table 列数据
+  // const [skuDataSource, setSkuDataSource] = useState([]) //当前sku table 值数据
+  const [needRender, setNeedRender] = useState(false)
   const [form] = Form.useForm()
   //表单提交方法
   const onFinish = (values: any) => {
@@ -240,6 +241,8 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
   }
   //商品规格UI
   const listSpecFormList = () => {
+    // console.log('==========243')
+    // console.log(listSpec)
     return (
       <Form.List name={'listSpec'}>
         {(fields) => (
@@ -280,32 +283,35 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
       </Form.List>
     )
   }
-  //库存量
   interface SkuColumns {
     name: string
     id: number
+    value: []
   }
-  //生成skuColumns
-  const getSkuColumns = () => {
-    let arr: object[] = []
+  //生成table的columns数据
+  const getSkuColumns = (listSpec: SkuColumns[]) => {
+    let arr: any = []
     listSpec.map((item: SkuColumns) => {
       arr.push({
         title: item.name,
-        dataIndex: item.name,
-        key: item.name
+        dataIndex: 'value' + item.id,
+        key: 'value' + item.id
       })
     })
     const subArr = [
       {
         title: '价格',
+        dataIndex: 'price',
         key: 'price'
       },
       {
         title: '库存',
+        dataIndex: 'stock',
         key: 'stock'
       },
       {
         title: '库存预警',
+        dataIndex: 'alertStock',
         key: 'alertStock'
       },
       {
@@ -318,94 +324,130 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
         )
       }
     ]
-    arr.concat(subArr)
+    arr = arr.concat(subArr)
     // console.log(arr)
     return arr
   }
-  const skuColumns = getSkuColumns()
-  let skuDataSource: object[] = []
-  // const fn = (data: any) => {
-  //   let totalArr: object[] = []
-  //   let arr: object[] = []
-  //   let frontStr: any = ''
-  //   for (let i = 0; i < data[0].value.length; i++) {
-  //     frontStr = data[0].value[i].value
-  //     for (let j = 0; j < data[1].value.length; j++) {
-  //       arr.push(frontStr)
-  //       arr.push(data[1].value[j].value)
+  // let k = 0
+  // let totalArr: object[] = [] //组合规格
+  // let arr: object[] = []
+  // let frontStr: any = []
+  // const tailFn = (data: any) => {
+  //   if (k >= listSpec.length) {
+  //     return
+  //   }
+  //   if (k === listSpec.length - 1) {
+  //     for (let j = 0; j < data.value.length; j++) {
+  //       arr = arr.concat(frontStr)
+  //       arr.push(data.value[j])
   //       totalArr.push(arr)
-  //       console.log(arr)
+  //       // console.log(frontStr)
   //       arr = []
   //     }
+  //     k = 0
+  //     frontStr = []
+  //     return totalArr
   //   }
-  //   return totalArr
+  //   for (let i = 0; i < data.value.length; i++) {
+  //     // console.log('data.value[i]=====')
+  //     // console.log(data.value[i])
+  //     frontStr.push(data.value[i])
+  //     // console.log('frontStr=====')
+  //     // console.log(frontStr)
+  //     k += 1
+  //     tailFn(listSpec[k])
+  //   }
   // }
-  // // const ddd = fn(listSpec)
-  // // console.log(ddd)
-
-  let k = 0
-  let totalArr: object[] = []
-  let arr: object[] = []
-  let frontStr: any = []
-  const tailFn = (data: any) => {
-    if (k >= listSpec.length) {
-      return
-    }
-    if (k === listSpec.length - 1) {
-      for (let j = 0; j < data.value.length; j++) {
-        arr = arr.concat(frontStr)
-        arr.push(data.value[j])
-        totalArr.push(arr)
-        console.log(arr)
-        arr = []
+  //将规格组合并转成table数据
+  const getSkuDataSource = (listSpec: SkuColumns[]) => {
+    //将多个数组实现排列组合
+    const tailFn = () => {
+      let arrs: [][] = []
+      for (let i = 0; i < listSpec.length; i++) {
+        arrs.push(listSpec[i].value)
       }
-      return
+      var sarr = [[]]
+      for (var i = 0; i < arrs.length; i++) {
+        var tarr = []
+        for (var j = 0; j < sarr.length; j++) {
+          for (let k: number = 0; k < arrs[i].length; k++) {
+            tarr.push(sarr[j].concat(arrs[i][k]))
+          }
+        }
+        sarr = tarr
+      }
+      // console.log(sarr)
+      return sarr
     }
-    for (let i = 0; i < data.value.length; i++) {
-      frontStr.push(data.value[i])
-      k += 1
-      tailFn(listSpec[k])
-    }
-  }
-  tailFn(listSpec[k])
-  console.log('372')
-  console.log(totalArr)
-  const getSkuDataSource = () => {
-    let arr: object[] = []
-    totalArr.map((item: any) => {
+    let totalArr = tailFn()
+    let mainArr: any = []
+    totalArr.map((item: any, index) => {
+      let obj: any = {
+        key: index + '',
+        price: 1,
+        stock: 1,
+        alertStock: 1
+      }
+      let subObj: any = {}
       item.map((subItem: any, index: number) => {
-        arr.push({
-          key: index + 1,
-          name: subItem.value,
-          price: 1,
-          stock: 1,
-          alertStock: 1
-        })
+        subObj['value' + subItem.specId] = subItem.value
       })
+      Object.assign(obj, subObj)
+      mainArr.push(obj)
     })
-    return arr
+    return mainArr
   }
-  skuDataSource = getSkuDataSource()
+  // console.log(getSkuDataSource())
+  let skuColumns: object[] = []
+  let skuDataSource: object[] = []
+  const setSkuTableData = (listSpec: SkuColumns[]) => {
+    skuColumns = getSkuColumns(listSpec)
+    skuDataSource = getSkuDataSource(listSpec)
+  }
+  setSkuTableData(listSpec)
   //sku相关--end
   return (
     <Form.Provider
       onFormFinish={(name, { values, forms }) => {
         if (name === 'skuForm') {
           const { basicForm, skuForm } = forms
-          const listSpec = basicForm.getFieldValue('listSpec') || []
+          let listSpec = basicForm.getFieldValue('listSpec') || []
           const sku = skuForm.getFieldValue('skuValue') || ''
           // console.log(sku)
+          // console.log('specKey=====')
+          // console.log(specKey)
           const currentSpecValue = listSpec[specKey].value
-          // console.log(currentSpecValue.push({ ...currentSpecValue[0], value: sku, id: '' }))
+          // console.log('currentSpecValue=======')
           // console.log(currentSpecValue)
-          // console.log('292')
+          currentSpecValue.push(Object.assign({}, currentSpecValue[0], { id: '', value: sku }))
           basicForm.setFieldsValue({ listSpec })
+          console.log('414=============')
+          // console.log(basicForm.getFieldValue('listSpec'))
+          listSpec = basicForm.getFieldValue('listSpec') || []
+          // skuColumns = getSkuColumns(listSpec)
+          // skuDataSource = getSkuDataSource(listSpec)
+          setSkuTableData(listSpec)
+          setNeedRender(true)
+          // console.log(skuDataSource)
           // console.log(values)
+          //更新localListSpec setCurrentListSpec(oListSpec)
           setSkuFormVisible(false)
         }
         if (name === 'basicForm') {
           // console.log('237')
           console.log(values)
+        }
+      }}
+      onFormChange={(formName, { changedFields, forms }) => {
+        if (formName === 'basicForm') {
+          // console.log('changedFields========427')
+          // console.log(changedFields)
+          const { basicForm } = forms
+          const listSpec = basicForm.getFieldValue('listSpec') || []
+          console.log('skuDataSource========429')
+          // console.log(listSpec)
+          setSkuTableData(listSpec)
+          setNeedRender(true)
         }
       }}
     >
