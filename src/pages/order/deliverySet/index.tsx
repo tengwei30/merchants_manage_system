@@ -5,6 +5,7 @@ import zhCN from 'antd/es/locale/zh_CN'
 import moment from 'moment'
 import 'moment/locale/zh-cn'
 moment.locale('zh-cn')
+import { getDetail } from '../../../api/afterSales'
 import './index.css'
 const { Option } = Select
 const columns = [
@@ -52,6 +53,8 @@ const rowSelection = {
     console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows)
   }
 }
+
+// fetchData()
 const DeliverySet = () => {
   const [isModalVisible, setIsModalVisible] = React.useState(false)
   const showModal = () => {
@@ -65,6 +68,12 @@ const DeliverySet = () => {
   const handleCancel = () => {
     setIsModalVisible(false)
   }
+  const fetchData = async () => {
+    getDetail().then((res: any) => {
+      console.log(res)
+    })
+  }
+  fetchData()
   const [form] = Form.useForm()
   return (
     <>

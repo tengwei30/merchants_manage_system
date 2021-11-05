@@ -1,5 +1,5 @@
 import axios from 'axios'
-
+import { Redirect } from 'react-router'
 interface codeType {
   [key: string]: unknown
 }
@@ -39,9 +39,7 @@ axios.interceptors.request.use(
   (config) => {
     const configTemp = Object.create(config)
     let token = window.localStorage.getItem('token')
-    if (token) {
-      configTemp.headers = Object.assign({}, configTemp.headers, JSON.parse(token))
-    }
+    token && (configTemp.headers = Object.assign({}, configTemp.headers, JSON.parse(token)))
     configTemp.headers.common.eventTime = Date.now()
     // Do something before request is sent
     return configTemp
@@ -51,11 +49,12 @@ axios.interceptors.request.use(
 
 // 响应拦截器
 axios.interceptors.response.use(
-  (response) => {
+  (response: any) => {
     // 状态码为 2XX的都会走这
-    // if (response.data.errno === 777 || response.data.errno === 999 || response.data.errno === 555) {
-    // 这块需要重定向到 登录页面
-    // }
+    if (response.data.code === '000004') {
+      window.location.href = ''
+      localStorage.removeItem('token')
+    }
     return response
   },
   async (error) => {
