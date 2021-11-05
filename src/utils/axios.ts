@@ -38,6 +38,10 @@ axios.defaults.validateStatus = function (status) {
 axios.interceptors.request.use(
   (config) => {
     const configTemp = Object.create(config)
+    let token = window.localStorage.getItem('token')
+    if (token) {
+      configTemp.headers = Object.assign({}, configTemp.headers, JSON.parse(token))
+    }
     configTemp.headers.common.eventTime = Date.now()
     // Do something before request is sent
     return configTemp
