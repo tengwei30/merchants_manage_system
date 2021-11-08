@@ -4,6 +4,7 @@ import {
   Row,
   Col,
   Input,
+  InputNumber,
   Button,
   Select,
   Upload,
@@ -12,7 +13,8 @@ import {
   Space,
   Avatar,
   Typography,
-  Table
+  Table,
+  Popconfirm
 } from 'antd'
 import {
   LoadingOutlined,
@@ -62,6 +64,7 @@ const data = [
   }
 ]
 const { Option } = Select
+let skuTableData = {}
 const layout = {
   labelCol: { span: 3 },
   wrapperCol: { span: 20 }
@@ -96,7 +99,7 @@ function beforeUpload(file: any) {
   }
   return isJpgOrPng && isLt2M
 }
-//sku相关
+//定义添加规格值from表单参数接口--sku相关
 interface SkuFormProps {
   visible: boolean
   onCancel: () => void
@@ -115,7 +118,7 @@ const useResetFormOnCloseModal = ({ form, visible }: { form: FormInstance; visib
     }
   }, [visible])
 }
-//添加sku值的form表单
+//添加sku值的form表单组件
 const SkuForm: React.FC<SkuFormProps> = ({ visible, onCancel }) => {
   const [form] = Form.useForm()
   useResetFormOnCloseModal({
@@ -138,6 +141,294 @@ const SkuForm: React.FC<SkuFormProps> = ({ visible, onCancel }) => {
     </Modal>
   )
 }
+//定义sku表格列接口
+interface SkuColumns {
+  name: string
+  id: number
+  value: []
+  editable: boolean
+  dataIndex: string
+  title: string
+}
+//定义sku表格数据项接口
+interface SkuDataSource {
+  key: string
+  price: number
+  stock: number
+  alertStock: number
+  [propName: string]: any
+}
+interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
+  editing: boolean
+  dataIndex: string
+  title: any
+  inputType: 'number' | 'text'
+  record: SkuDataSource
+  index: number
+  children: React.ReactNode
+}
+
+const EditableCell: React.FC<EditableCellProps> = ({
+  editing,
+  dataIndex,
+  title,
+  inputType,
+  record,
+  index,
+  children,
+  ...restProps
+}) => {
+  const inputNode = inputType === 'number' ? <InputNumber /> : <Input />
+  return (
+    <td {...restProps}>
+      {editing ? (
+        <Form.Item
+          name={dataIndex}
+          style={{ margin: 0 }}
+          rules={[
+            {
+              required: true,
+              message: `Please Input ${title}!`
+            }
+          ]}
+        >
+          {inputNode}
+        </Form.Item>
+      ) : (
+        children
+      )}
+    </td>
+  )
+}
+
+interface SkuTableFormProps {
+  currentListSpec: SkuColumns[]
+  updataTime: Date
+}
+//输出sku表格UI
+const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec, updataTime }) => {
+  let skuColumns: SkuColumns[] = [] //sku表格列--渲染数据
+  let skuDataSource: SkuDataSource[] = [] //sku表格数据--渲染数据
+  const [form] = Form.useForm()
+  const [data, setData] = useState(skuDataSource)
+  const [editingKey, setEditingKey] = useState('')
+  const [isDataChanged, setIsDataChanged] = useState(false)
+  const isEditing = (record: SkuDataSource) => record.key === editingKey
+
+  const edit = (record: Partial<SkuDataSource> & { key: React.Key }) => {
+    form.setFieldsValue({ price: 0, stock: 0, alertStock: 0, ...record })
+    setEditingKey(record.key)
+    setIsDataChanged(false)
+  }
+
+  const cancel = () => {
+    setEditingKey('')
+  }
+
+  const save = async (key: React.Key) => {
+    try {
+      const row = (await form.validateFields()) as SkuDataSource
+
+      const newData = [...data]
+      const index = newData.findIndex((item) => key === item.key)
+      if (index > -1) {
+        const item = newData[index]
+        newData.splice(index, 1, {
+          ...item,
+          ...row
+        })
+        setData(newData)
+        // setIsDataChanged(true)
+        setEditingKey('')
+      } else {
+        newData.push(row)
+        setData(newData)
+        // setIsDataChanged(false)
+        setEditingKey('')
+      }
+    } catch (errInfo) {
+      setIsDataChanged(false)
+      console.log('Validate Failed:', errInfo)
+    }
+  }
+  //生成table的columns数据
+  const getSkuColumns = (listSpec: SkuColumns[]) => {
+    let arr: any = []
+    listSpec.map((item: SkuColumns) => {
+      arr.push({
+        title: item.name,
+        dataIndex: 'value' + item.id,
+        key: 'value' + item.id
+      })
+    })
+    const subArr = [
+      {
+        title: '价格',
+        dataIndex: 'price',
+        key: 'price',
+        editable: true
+      },
+      {
+        title: '库存',
+        dataIndex: 'stock',
+        key: 'stock',
+        editable: true
+      },
+      {
+        title: '库存预警',
+        dataIndex: 'alertStock',
+        key: 'alertStock',
+        editable: true
+      },
+      {
+        title: '操作',
+        key: 'action',
+        render: (_: any, record: SkuDataSource) => {
+          const editable = isEditing(record)
+          return editable ? (
+            <span>
+              <Button type="primary" onClick={() => save(record.key)} style={{ marginRight: 8 }}>
+                确定
+              </Button>
+              <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
+                <Button>取消</Button>
+              </Popconfirm>
+            </span>
+          ) : (
+            <Typography.Link disabled={editingKey !== ''} onClick={() => edit(record)}>
+              编辑
+            </Typography.Link>
+          )
+        }
+      }
+    ]
+    arr = arr.concat(subArr)
+    // console.log(arr)
+    return arr
+  }
+  //将规格组合并转成table数据
+  const getSkuDataSource = (listSpec: SkuColumns[], data: SkuDataSource[]) => {
+    //将多个数组实现排列组合
+    const tailFn = () => {
+      let arrs: [][] = []
+      for (let i = 0; i < listSpec.length; i++) {
+        arrs.push(listSpec[i].value)
+      }
+      // console.log('arrs===========')
+      // console.log(arrs)
+      var sarr = [[]]
+      for (var i = 0; i < arrs.length; i++) {
+        var tarr = []
+        for (var j = 0; j < sarr.length; j++) {
+          for (let k: number = 0; k < arrs[i].length; k++) {
+            // console.log('321================')
+            // console.log(arrs[i][k])
+            // console.log(sarr[j])
+            // let obj = arrs[i][k]
+            Object.assign(arrs[i][k], { num: k })
+            // console.log(arrs[i][k])
+            // console.log('321================end')
+            tarr.push(sarr[j].concat(arrs[i][k]))
+          }
+        }
+        sarr = tarr
+      }
+      // console.log(sarr)
+      return sarr
+    }
+    let totalArr = tailFn()
+    let mainArr: any = []
+    totalArr.map((item: any, index) => {
+      let subObj: any = {}
+      item.map((subItem: any, index: number) => {
+        subObj['value_' + subItem.specId + '_' + subItem.num] = subItem.value
+      })
+      let itemIndex = -1
+      if (data.length) {
+        itemIndex = data.findIndex((item) => {
+          let isExit = false
+          // console.log(subObj)
+          const subObjKeys: string[] = Object.keys(subObj)
+          for (let i = 0; i < subObjKeys.length; i++) {
+            const key: string = subObjKeys[i]
+            if (!item[key]) {
+              isExit = false
+              break
+            } else {
+              isExit = true
+            }
+          }
+          return isExit
+        })
+      }
+      let obj: object = {}
+      if (itemIndex > -1) {
+        //存在，更新
+        obj = Object.assign({}, data[itemIndex], subObj)
+      } else {
+        obj = {
+          key: index.toString(),
+          price: 1,
+          stock: 1,
+          alertStock: 1
+        }
+        Object.assign(obj, subObj)
+      }
+      mainArr.push(obj)
+    })
+    console.log(mainArr)
+    return mainArr
+  }
+  //生成当前sku表格的渲染数据（列和数据）
+  const setSkuTableData = (listSpec: SkuColumns[]) => {
+    skuColumns = getSkuColumns(listSpec)
+    skuDataSource = getSkuDataSource(listSpec, data)
+  }
+  setSkuTableData(currentListSpec)
+  useEffect(() => {
+    // console.log('useEffect=======')
+    // skuDataSource = getSkuDataSource(currentListSpec, data)
+    setData(skuDataSource)
+  }, [updataTime])
+  console.log('data=========1111')
+  console.log(data)
+  skuTableData = data
+  const mergedColumns = skuColumns.map((col) => {
+    if (!col.editable) {
+      return col
+    }
+    return {
+      ...col,
+      onCell: (record: SkuDataSource) => ({
+        record,
+        inputType: col.dataIndex === 'upload' ? 'text' : 'number',
+        dataIndex: col.dataIndex,
+        title: col.title,
+        editing: isEditing(record)
+      })
+    }
+  })
+  // console.log('updata=================')
+  return (
+    <Form name="skuTableForm" form={form} component={false}>
+      <Table
+        components={{
+          body: {
+            cell: EditableCell
+          }
+        }}
+        bordered
+        dataSource={data}
+        columns={mergedColumns}
+        rowClassName="editable-row"
+        pagination={{
+          onChange: cancel
+        }}
+      />
+    </Form>
+  )
+}
+//sku相关--end
 //基础form表单
 const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
   // 设置编辑器初始内容
@@ -155,10 +446,8 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
   }) //图片预览
   // const [previewVisible, setPreviewVisible] = useState(false) //是否显示图片预览弹窗
   const [specKey, setSpecKey] = useState(NaN) //当前操作的规格数组下标
-  // const [currentListSpec, setCurrentListSpec] = useState(listSpec) //当前商品规格集
-  // const [skuColumns, setSkuColumns] = useState([]) //当前sku table 列数据
-  // const [skuDataSource, setSkuDataSource] = useState([]) //当前sku table 值数据
-  const [needRender, setNeedRender] = useState(false)
+  const [currentListSpec, setCurrentListSpec] = useState(listSpec) //当前商品规格集
+  const [updataTime, setUpdataTime] = useState(new Date()) //当规格值变化时，控制sku表格更新
   const [form] = Form.useForm()
   //表单提交方法
   const onFinish = (values: any) => {
@@ -229,6 +518,7 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
     </div>
   )
   //sku相关--start
+  //规格--控制‘添加规格’弹窗显示隐藏变量
   const [skuFormVisible, setSkuFormVisible] = useState(false)
 
   const showSkuForm = (key: number) => {
@@ -239,7 +529,7 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
   const hideSkuForm = () => {
     setSkuFormVisible(false)
   }
-  //商品规格UI
+  //返回商品规格UI
   const listSpecFormList = () => {
     // console.log('==========243')
     // console.log(listSpec)
@@ -256,7 +546,7 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
                         {subFields.map(({ key, name, fieldKey, ...restField }) => (
                           <Space
                             key={key}
-                            style={{ width: '13%', marginRight: 30 }}
+                            style={{ width: '120px', marginRight: 30 }}
                             align="baseline"
                           >
                             <Form.Item
@@ -269,7 +559,7 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
                             <MinusCircleOutlined onClick={() => remove(name)} />
                           </Space>
                         ))}
-                        <Form.Item style={{ width: '20%', display: 'inline-block' }}>
+                        <Form.Item style={{ width: '', display: 'inline-block' }}>
                           <Button onClick={() => showSkuForm(field.key)}>+添加规格值</Button>
                         </Form.Item>
                       </>
@@ -283,129 +573,6 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
       </Form.List>
     )
   }
-  interface SkuColumns {
-    name: string
-    id: number
-    value: []
-  }
-  //生成table的columns数据
-  const getSkuColumns = (listSpec: SkuColumns[]) => {
-    let arr: any = []
-    listSpec.map((item: SkuColumns) => {
-      arr.push({
-        title: item.name,
-        dataIndex: 'value' + item.id,
-        key: 'value' + item.id
-      })
-    })
-    const subArr = [
-      {
-        title: '价格',
-        dataIndex: 'price',
-        key: 'price'
-      },
-      {
-        title: '库存',
-        dataIndex: 'stock',
-        key: 'stock'
-      },
-      {
-        title: '库存预警',
-        dataIndex: 'alertStock',
-        key: 'alertStock'
-      },
-      {
-        title: '操作',
-        key: 'action',
-        render: (text: string, record: object) => (
-          <Space size="middle">
-            <a>上传图片</a>
-          </Space>
-        )
-      }
-    ]
-    arr = arr.concat(subArr)
-    // console.log(arr)
-    return arr
-  }
-  // let k = 0
-  // let totalArr: object[] = [] //组合规格
-  // let arr: object[] = []
-  // let frontStr: any = []
-  // const tailFn = (data: any) => {
-  //   if (k >= listSpec.length) {
-  //     return
-  //   }
-  //   if (k === listSpec.length - 1) {
-  //     for (let j = 0; j < data.value.length; j++) {
-  //       arr = arr.concat(frontStr)
-  //       arr.push(data.value[j])
-  //       totalArr.push(arr)
-  //       // console.log(frontStr)
-  //       arr = []
-  //     }
-  //     k = 0
-  //     frontStr = []
-  //     return totalArr
-  //   }
-  //   for (let i = 0; i < data.value.length; i++) {
-  //     // console.log('data.value[i]=====')
-  //     // console.log(data.value[i])
-  //     frontStr.push(data.value[i])
-  //     // console.log('frontStr=====')
-  //     // console.log(frontStr)
-  //     k += 1
-  //     tailFn(listSpec[k])
-  //   }
-  // }
-  //将规格组合并转成table数据
-  const getSkuDataSource = (listSpec: SkuColumns[]) => {
-    //将多个数组实现排列组合
-    const tailFn = () => {
-      let arrs: [][] = []
-      for (let i = 0; i < listSpec.length; i++) {
-        arrs.push(listSpec[i].value)
-      }
-      var sarr = [[]]
-      for (var i = 0; i < arrs.length; i++) {
-        var tarr = []
-        for (var j = 0; j < sarr.length; j++) {
-          for (let k: number = 0; k < arrs[i].length; k++) {
-            tarr.push(sarr[j].concat(arrs[i][k]))
-          }
-        }
-        sarr = tarr
-      }
-      // console.log(sarr)
-      return sarr
-    }
-    let totalArr = tailFn()
-    let mainArr: any = []
-    totalArr.map((item: any, index) => {
-      let obj: any = {
-        key: index + '',
-        price: 1,
-        stock: 1,
-        alertStock: 1
-      }
-      let subObj: any = {}
-      item.map((subItem: any, index: number) => {
-        subObj['value' + subItem.specId] = subItem.value
-      })
-      Object.assign(obj, subObj)
-      mainArr.push(obj)
-    })
-    return mainArr
-  }
-  // console.log(getSkuDataSource())
-  let skuColumns: object[] = []
-  let skuDataSource: object[] = []
-  const setSkuTableData = (listSpec: SkuColumns[]) => {
-    skuColumns = getSkuColumns(listSpec)
-    skuDataSource = getSkuDataSource(listSpec)
-  }
-  setSkuTableData(listSpec)
-  //sku相关--end
   return (
     <Form.Provider
       onFormFinish={(name, { values, forms }) => {
@@ -424,30 +591,29 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
           console.log('414=============')
           // console.log(basicForm.getFieldValue('listSpec'))
           listSpec = basicForm.getFieldValue('listSpec') || []
-          // skuColumns = getSkuColumns(listSpec)
-          // skuDataSource = getSkuDataSource(listSpec)
-          setSkuTableData(listSpec)
-          setNeedRender(true)
-          // console.log(skuDataSource)
-          // console.log(values)
-          //更新localListSpec setCurrentListSpec(oListSpec)
+          setCurrentListSpec(listSpec)
           setSkuFormVisible(false)
+          setUpdataTime(new Date())
         }
         if (name === 'basicForm') {
-          // console.log('237')
-          console.log(values)
+          console.log('skuTableData=======')
+          console.log(skuTableData)
+          // console.log(values)
         }
       }}
       onFormChange={(formName, { changedFields, forms }) => {
         if (formName === 'basicForm') {
-          // console.log('changedFields========427')
-          // console.log(changedFields)
+          console.log('changedFields========427')
+          console.log(changedFields)
+          if (!changedFields.length) {
+            return
+          }
           const { basicForm } = forms
           const listSpec = basicForm.getFieldValue('listSpec') || []
-          console.log('skuDataSource========429')
+          // console.log('skuDataSource========429')
           // console.log(listSpec)
-          setSkuTableData(listSpec)
-          setNeedRender(true)
+          setCurrentListSpec(listSpec)
+          setUpdataTime(new Date())
         }
       }}
     >
@@ -466,7 +632,9 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
           <div className={styles.content}>
             <Form.Item style={{ width: '100%' }}>{listSpecFormList()}</Form.Item>
             <Form.Item label="库存配置">
-              <Table columns={skuColumns} dataSource={skuDataSource} />
+              {/* <Table columns={skuColumns} dataSource={skuDataSource} /> */}
+              {/* <SkuTable columns={skuColumns} dataSource={skuDataSource} /> */}
+              <SkuTable currentListSpec={currentListSpec} updataTime={updataTime} />
             </Form.Item>
           </div>
         </div>
