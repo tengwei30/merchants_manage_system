@@ -205,6 +205,14 @@ interface SkuTableFormProps {
   currentListSpec: SkuColumns[]
   updataTime: Date
 }
+interface SubSkuSpec {
+  indexNum: number
+  specColleId: number
+  specId: number
+  value: string
+  type: number
+  name: string
+}
 //输出sku表格UI
 const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec, updataTime }) => {
   let skuColumns: SkuColumns[] = [] //sku表格列--渲染数据
@@ -238,12 +246,10 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec, updataTime }) 
           ...row
         })
         setData(newData)
-        // setIsDataChanged(true)
         setEditingKey('')
       } else {
         newData.push(row)
         setData(newData)
-        // setIsDataChanged(false)
         setEditingKey('')
       }
     } catch (errInfo) {
@@ -254,11 +260,11 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec, updataTime }) 
   //生成table的columns数据
   const getSkuColumns = (listSpec: SkuColumns[]) => {
     let arr: any = []
-    listSpec.map((item: SkuColumns) => {
+    listSpec.map((item: SkuColumns, index) => {
       arr.push({
         title: item.name,
-        dataIndex: 'value' + item.id,
-        key: 'value' + item.id
+        dataIndex: 'value_' + item.id,
+        key: 'value_' + item.id
       })
     })
     const subArr = [
@@ -311,47 +317,54 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec, updataTime }) 
     //将多个数组实现排列组合
     const tailFn = () => {
       let arrs: [][] = []
+      let specNameArr: string[] = []
       for (let i = 0; i < listSpec.length; i++) {
         arrs.push(listSpec[i].value)
+        specNameArr.push(listSpec[i].name)
       }
-      // console.log('arrs===========')
-      // console.log(arrs)
       var sarr = [[]]
       for (var i = 0; i < arrs.length; i++) {
         var tarr = []
         for (var j = 0; j < sarr.length; j++) {
           for (let k: number = 0; k < arrs[i].length; k++) {
-            // console.log('321================')
-            // console.log(arrs[i][k])
-            // console.log(sarr[j])
-            // let obj = arrs[i][k]
-            Object.assign(arrs[i][k], { num: k })
-            // console.log(arrs[i][k])
-            // console.log('321================end')
+            Object.assign(arrs[i][k], { indexNum: k, name: specNameArr[i] })
             tarr.push(sarr[j].concat(arrs[i][k]))
           }
         }
         sarr = tarr
       }
-      // console.log(sarr)
       return sarr
     }
     let totalArr = tailFn()
     let mainArr: any = []
     totalArr.map((item: any, index) => {
       let subObj: any = {}
+      let subSkuSpec: object[] = []
+      // console.log('item=============')
+      // console.log(item)
       item.map((subItem: any, index: number) => {
-        subObj['value_' + subItem.specId + '_' + subItem.num] = subItem.value
+        // console.log('subItem=============')
+        // console.log(subItem)
+        subObj['value_' + subItem.specId] = subItem.value
+        //生成每个sku的属性集：subSkuSpec
+        subSkuSpec.push({
+          indexNum: subItem.indexNum,
+          specColleId: subItem.specColleId,
+          specId: subItem.specId,
+          value: subItem.value,
+          type: 1, //1:商品属性 0:普通属性
+          name: subItem.name
+        })
       })
+      subObj['subSkuSpec'] = subSkuSpec
       let itemIndex = -1
+      //判断记录是否存在
       if (data.length) {
         itemIndex = data.findIndex((item) => {
           let isExit = false
-          // console.log(subObj)
-          const subObjKeys: string[] = Object.keys(subObj)
-          for (let i = 0; i < subObjKeys.length; i++) {
-            const key: string = subObjKeys[i]
-            if (!item[key]) {
+          const specValues: SubSkuSpec[] = subObj.subSkuSpec
+          for (let i = 0; i < specValues.length; i++) {
+            if (item.subSkuSpec[i].indexNum !== specValues[i].indexNum) {
               isExit = false
               break
             } else {
@@ -363,20 +376,20 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec, updataTime }) 
       }
       let obj: object = {}
       if (itemIndex > -1) {
-        //存在，更新
+        //记录存在-->更新
         obj = Object.assign({}, data[itemIndex], subObj)
       } else {
         obj = {
           key: index.toString(),
-          price: 1,
-          stock: 1,
-          alertStock: 1
+          price: 0,
+          stock: 0,
+          alertStock: 0
         }
         Object.assign(obj, subObj)
       }
       mainArr.push(obj)
     })
-    console.log(mainArr)
+    // console.log(mainArr)
     return mainArr
   }
   //生成当前sku表格的渲染数据（列和数据）
@@ -386,8 +399,6 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec, updataTime }) 
   }
   setSkuTableData(currentListSpec)
   useEffect(() => {
-    // console.log('useEffect=======')
-    // skuDataSource = getSkuDataSource(currentListSpec, data)
     setData(skuDataSource)
   }, [updataTime])
   console.log('data=========1111')
