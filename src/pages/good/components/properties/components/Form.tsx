@@ -27,6 +27,7 @@ import { FormInstance } from 'antd/lib/form'
 import BraftEditor from 'braft-editor'
 import 'braft-editor/dist/index.css'
 import styles from '../components/Form.module.css'
+import Uploader from '../../../components/properties/components/Uploader'
 const data = [
   {
     creater: '',
@@ -72,33 +73,7 @@ const layout = {
 const tailLayout = {
   wrapperCol: { offset: 8, span: 16 }
 }
-//商品图片上传--头图
-function getBase64(file: any, callback: any) {
-  const reader = new FileReader()
-  reader.addEventListener('load', () => callback(reader.result))
-  reader.readAsDataURL(file)
-}
-//商品图片上传--普通
-const getOtherBase64 = (file: any) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = (error) => reject(error)
-  })
-}
-//商品图片上传--上传校验
-function beforeUpload(file: any) {
-  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
-  if (!isJpgOrPng) {
-    message.error('You can only upload JPG/PNG file!')
-  }
-  const isLt2M = file.size / 1024 / 1024 < 2
-  if (!isLt2M) {
-    message.error('Image must smaller than 2MB!')
-  }
-  return isJpgOrPng && isLt2M
-}
+
 //定义添加规格值from表单参数接口--sku相关
 interface SkuFormProps {
   visible: boolean
@@ -149,6 +124,7 @@ interface SkuColumns {
   editable: boolean
   dataIndex: string
   title: string
+  inputType: string
 }
 //定义sku表格数据项接口
 interface SkuDataSource {
@@ -162,7 +138,7 @@ interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
   editing: boolean
   dataIndex: string
   title: any
-  inputType: 'number' | 'text'
+  inputType: 'number' | 'text' | 'upload'
   record: SkuDataSource
   index: number
   children: React.ReactNode
@@ -264,7 +240,9 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec, updataTime }) 
       arr.push({
         title: item.name,
         dataIndex: 'value_' + item.id,
-        key: 'value_' + item.id
+        key: 'value_' + item.id,
+        fixed: 'left',
+        width: 100
       })
     })
     const subArr = [
@@ -272,19 +250,53 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec, updataTime }) 
         title: '价格',
         dataIndex: 'price',
         key: 'price',
-        editable: true
+        editable: true,
+        width: 100
       },
       {
         title: '库存',
         dataIndex: 'stock',
         key: 'stock',
-        editable: true
+        editable: true,
+        width: 100
       },
       {
         title: '库存预警',
         dataIndex: 'alertStock',
         key: 'alertStock',
         editable: true
+      },
+      {
+        title: '头图',
+        dataIndex: 'firstImg',
+        key: 'firstImg',
+        inputType: 'upload',
+        render: (fields: any) => {
+          return (
+            <>
+              {/* {fields.map((item: any) => {
+                return <img key={item.url} src={item.url} alt="" width="100px" />
+              })} */}
+              <Uploader fieldData={fields} />
+            </>
+          )
+        }
+      },
+      {
+        title: '图片集',
+        dataIndex: 'imgs',
+        key: 'imgs',
+        inputType: 'upload',
+        render: (fields: any) => {
+          return (
+            <>
+              {/* {fields.map((item: any) => {
+                return <img key={item.url} src={item.url} alt="" width="100px" />
+              })} */}
+              <Uploader fieldData={fields} />
+            </>
+          )
+        }
       },
       {
         title: '操作',
@@ -383,7 +395,23 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec, updataTime }) 
           key: index.toString(),
           price: 0,
           stock: 0,
-          alertStock: 0
+          alertStock: 0,
+          imgs: [
+            {
+              uid: '-1',
+              name: 'image.png',
+              status: 'done',
+              url: 'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png'
+            }
+          ],
+          firstImg: [
+            {
+              uid: '-2',
+              name: 'image.png',
+              status: 'done',
+              url: 'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png'
+            }
+          ]
         }
         Object.assign(obj, subObj)
       }
@@ -412,7 +440,7 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec, updataTime }) 
       ...col,
       onCell: (record: SkuDataSource) => ({
         record,
-        inputType: col.dataIndex === 'upload' ? 'text' : 'number',
+        inputType: col.inputType === 'upload' ? 'upload' : 'number',
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record)
@@ -435,6 +463,7 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec, updataTime }) 
         pagination={{
           onChange: cancel
         }}
+        scroll={{ x: 1500, y: 600 }}
       />
     </Form>
   )
@@ -446,16 +475,14 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
   const [editorState, setEditorState] = useState(BraftEditor.createEditorState('<p></p>'))
   const [sort, setSort] = useState('美妆>护肤品>官方直售')
   const [expressTemplate, setExpressTemplate] = useState('运费模版')
-  // const [loading, setLoading] = useState(false)
-  const [imageUrl, setImageUrl] = useState('')
-  const [mainFile, setMainFile] = useState([]) //已上传的主图片
-  const [files, setFiles] = useState([]) //已上传的图片列表
-  const [previewImg, setPreviewImg] = useState({
-    previewImage: '',
-    previewVisible: false,
-    previewTitle: ''
-  }) //图片预览
-  // const [previewVisible, setPreviewVisible] = useState(false) //是否显示图片预览弹窗
+  // const [imageUrl, setImageUrl] = useState('')
+  // const [mainFile, setMainFile] = useState([]) //已上传的主图片
+  // const [files, setFiles] = useState([]) //已上传的图片列表
+  // const [previewImg, setPreviewImg] = useState({
+  //   previewImage: '',
+  //   previewVisible: false,
+  //   previewTitle: ''
+  // }) //图片预览
   const [specKey, setSpecKey] = useState(NaN) //当前操作的规格数组下标
   const [currentListSpec, setCurrentListSpec] = useState(listSpec) //当前商品规格集
   const [updataTime, setUpdataTime] = useState(new Date()) //当规格值变化时，控制sku表格更新
@@ -481,53 +508,53 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
   const handleChange = (editorState: any) => {
     setEditorState(editorState)
   }
-  //主图片上传
-  const handleMainUploadChange = (info: any) => {
-    if (info.file.status === 'uploading') {
-      // setLoading(true)
-      return
-    }
-    console.log(info.file)
-    if (info.file.status === 'done') {
-      // Get this url from response in real world.
-      // getBase64(info.file.originFileObj, (imageUrl: string) => {
-      //   // setImageUrl(imageUrl)
-      // })
-      console.log(info.fileList)
-      // setLoading(false)
-      setMainFile(info.fileList)
-    }
-  }
-  //非主图片上传
-  const handleOtherUploadChange = ({ file, fileList }: any) => {
-    console.log(file)
-    if (file.status === 'done') {
-      console.log(fileList.concat(files))
-      setFiles(fileList.concat(files))
-    }
-  }
-  //图片预览
-  const handlePreview = async (file: any) => {
-    if (!file.url && !file.preview) {
-      file.preview = await getOtherBase64(file.originFileObj)
-    }
-    setPreviewImg({
-      previewImage: file.url || file.preview,
-      previewVisible: true,
-      previewTitle: file.name || file.url.substring(file.url.lastIndexOf('/') + 1)
-    })
-  }
-  //关闭图片预览弹窗
-  const handleModalCancel = () => {
-    // setPreviewVisible(false)
-    setPreviewImg(Object.assign({}, previewImg, { previewVisible: false }))
-  }
-  const uploadButton = (
-    <div>
-      <PlusOutlined />
-      <div style={{ marginTop: 8 }}>上传图片</div>
-    </div>
-  )
+  // //spu主图片上传
+  // const handleMainUploadChange = (info: any) => {
+  //   if (info.file.status === 'uploading') {
+  //     // setLoading(true)
+  //     return
+  //   }
+  //   console.log(info.file)
+  //   if (info.file.status === 'done') {
+  //     // Get this url from response in real world.
+  //     // getBase64(info.file.originFileObj, (imageUrl: string) => {
+  //     //   // setImageUrl(imageUrl)
+  //     // })
+  //     console.log(info.fileList)
+  //     // setLoading(false)
+  //     setMainFile(info.fileList)
+  //   }
+  // }
+  // //spu非主图片上传
+  // const handleOtherUploadChange = ({ file, fileList }: any) => {
+  //   console.log(file)
+  //   if (file.status === 'done') {
+  //     console.log(fileList.concat(files))
+  //     setFiles(fileList.concat(files))
+  //   }
+  // }
+  // //图片预览
+  // const handlePreview = async (file: any) => {
+  //   if (!file.url && !file.preview) {
+  //     file.preview = await getOtherBase64(file.originFileObj)
+  //   }
+  //   setPreviewImg({
+  //     previewImage: file.url || file.preview,
+  //     previewVisible: true,
+  //     previewTitle: file.name || file.url.substring(file.url.lastIndexOf('/') + 1)
+  //   })
+  // }
+  // //关闭图片预览弹窗
+  // const handleModalCancel = () => {
+  //   // setPreviewVisible(false)
+  //   setPreviewImg(Object.assign({}, previewImg, { previewVisible: false }))
+  // }
+  // const uploadButton = (
+  //   <div>
+  //     <PlusOutlined />
+  //     <div style={{ marginTop: 8 }}>上传图片</div>
+  //   </div>
+  // )
   //sku相关--start
   //规格--控制‘添加规格’弹窗显示隐藏变量
   const [skuFormVisible, setSkuFormVisible] = useState(false)

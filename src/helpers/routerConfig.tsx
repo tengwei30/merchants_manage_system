@@ -12,6 +12,7 @@ import Comment from '../pages/order/comment/index'
 import Refund from '../pages/afterSales/refund/index'
 import Exchange from '../pages/afterSales/exchange/index'
 import AddGood from '../pages/good/add-good'
+import Express from '../pages/order/express/index'
 
 export interface SlideItem {
   name: string
@@ -99,6 +100,11 @@ export const slideBarConfig: SlideItem[] = [
         name: '评价管理',
         url: '/order/comment',
         component: Comment
+      },
+      {
+        name: '运费模版',
+        url: '/order/express',
+        component: Express
       }
     ]
   },
