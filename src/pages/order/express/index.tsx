@@ -34,17 +34,7 @@ const Express = () => {
       key: '1',
       name: '胡彦斌',
       age: 32,
-      address: '西湖区湖底公园1号',
-      render: (fields: any) => {
-        return (
-          <>
-            {/* {fields.map((item: any) => {
-              return <img key={item.url} src={item.url} alt="" width="100px" />
-            })} */}
-            <input />
-          </>
-        )
-      }
+      address: '西湖区湖底公园1号'
     },
     {
       key: '2',
@@ -56,7 +46,7 @@ const Express = () => {
 
   const columns = [
     {
-      title: '姓名',
+      title: '',
       dataIndex: 'name',
       key: 'name'
     },
@@ -68,7 +58,17 @@ const Express = () => {
     {
       title: '住址',
       dataIndex: 'address',
-      key: 'address'
+      key: 'address',
+      render: (fields: any) => {
+        console.log(fields)
+        return (
+          <>
+            <Form.Item name="">
+              <input />
+            </Form.Item>
+          </>
+        )
+      }
     }
   ]
   return (
