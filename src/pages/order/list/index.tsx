@@ -24,18 +24,18 @@ const renderContent = (value: any, index: Number) => {
 const columns = [
   {
     title: '商品详情',
-    dataIndex: 'name',
-    render: (value: String, item: Object, index: number) => {
-      const obj = {
-        children: value,
-        props: {
-          rowSpan: 0
-        }
-      }
-      if (index === 2) {
-        obj.props.rowSpan = 2
-      }
-    }
+    dataIndex: 'name'
+    // render: (value: String, item: Object, index: number) => {
+    //   const obj = {
+    //     children: value,
+    //     props: {
+    //       rowSpan: 0
+    //     }
+    //   }
+    //   if (index === 2) {
+    //     obj.props.rowSpan = 2
+    //   }
+    // }
   },
   {
     title: '单价',

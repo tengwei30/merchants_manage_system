@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React, { useState, useEffect } from 'react'
 import { DatePicker, Table, Row, Col, Form, Input, Select, Button, ConfigProvider } from 'antd'
 import zhCN from 'antd/es/locale/zh_CN'
 import moment from 'moment'
@@ -94,6 +94,13 @@ const rowSelection = {
   }
 }
 const Exchange = () => {
+  const [dataIns, setDataIns] = useState({ hits: [] })
+  useEffect(() => {
+    //const fetchData = async () => {
+    let res = '1 '
+    console.log(res)
+    //}
+  })
   const [form] = Form.useForm()
   return (
     <>
@@ -154,9 +161,9 @@ const Exchange = () => {
         </ConfigProvider>
         <div className="tableCon">
           <Table
-            rowSelection={{ type: 'checkbox', ...rowSelection }}
-            columns={columns}
-            dataSource={data}
+            // rowSelection={{ type: 'checkbox', ...rowSelection }}
+            // columns={columns}
+            // dataSource={data}
             bordered
           />
         </div>
