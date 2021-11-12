@@ -33,13 +33,16 @@ axios.defaults.validateStatus = function (status) {
 //   // baseURL,
 //   // timeout
 // });
-
 // 请求拦截器
 axios.interceptors.request.use(
   (config) => {
     const configTemp = Object.create(config)
-    let token = window.localStorage.getItem('token')
-    token && (configTemp.headers = Object.assign({}, configTemp.headers, JSON.parse(token)))
+    let token: string | null = window.localStorage.getItem('token')
+    // token && (configTemp.headers = Object.assign({}, configTemp.headers, JSON.parse(token)))
+    Object.assign(configTemp.headers, {
+      sessionId: token ? JSON.parse(token).sessionId : '',
+      'X-Client': ''
+    })
     configTemp.headers.common.eventTime = Date.now()
     // Do something before request is sent
     return configTemp
@@ -55,7 +58,7 @@ axios.interceptors.response.use(
       window.location.href = ''
       localStorage.removeItem('token')
     }
-    return response
+    return response.data
   },
   async (error) => {
     // 状态码 非 2XX的走这

@@ -9,6 +9,12 @@
   padding: 5px 10px;
   background-color: #E7E7E7;
 }
+.tip{
+  color:red;
+  font-size: 14px;
+  margin-left: 140px;
+  margin-bottom: 10px
+}
 /* .basic .formItem input{ */
   /* width: 100px; */
   /* display: inline-block; */
