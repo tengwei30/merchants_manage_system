@@ -15,8 +15,9 @@ export const company = () => {
  * YApi: http://yapi.yufu.cn:18094/project/9/interface/api/1563
  * tag: 地域相关api接口
  */
-export const region = () => {
+export const region = (params?: {}) => {
   return get({
-    url: '/goods/region/list-same-level'
+    url: '/goods/region/list-same-level',
+    data: params
   })
 }
