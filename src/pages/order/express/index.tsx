@@ -2,8 +2,12 @@ import React, { useState, useRef, useEffect, useContext } from 'react'
 import { Form, Select, Row, Col, Input, Button, Cascader, Table, Popconfirm, Modal } from 'antd'
 import { FormInstance } from 'antd/lib/form'
 import LayoutMenu from '../../../components/DashBoard'
-import RegionModal from '../express/regionModal'
+import RegionModal from '../express/components/RegionModal'
 import { company } from '../../../api/order'
+import { useDispatch, useSelector } from 'react-redux'
+import { AppState } from '../../../store/reduces'
+import { OrderState } from '../../../store/reduces/order.reducer'
+import { ServerData } from '../../../store/models/order'
 import styles from '../express/index.module.css'
 const { Option } = Select
 const layout = {
@@ -14,6 +18,21 @@ const tailLayout = {
   wrapperCol: { offset: 8, span: 16 }
 }
 
+// const regionData = [
+//   {
+//     ifSlected: false,
+//     regionCode: '2',
+//     regionName: '河北省',
+//     subMerchantExpressTemplateItemRegionDetailList: [
+//       {
+//         ifSlected: false,
+//         regionCode: '12',
+//         regionName: '三河市'
+//       }
+//     ]
+//   }
+// ]
+const regionData: ServerData[] = []
 //-----------
 const EditableContext = React.createContext<FormInstance<any> | null>(null)
 
@@ -128,29 +147,45 @@ interface EditableTableState {
 type ColumnTypes = Exclude<EditableTableProps['columns'], undefined>
 //-----------
 const Express: React.FC<EditableTableProps> = () => {
-  const tableData: DataType[] = [
-    {
-      key: 0,
-      regionArea: '',
-      firstCount: 0,
-      firstPrice: 0,
-      nextCount: 0,
-      nextPrice: 0
-    }
-  ]
   const [companyData, setCompanyData] = useState([])
-  const [dataSource, setDataSource] = useState(tableData)
-  const [count, setCount] = useState(tableData.length)
+  const [dataSource, setDataSource] = useState([] as DataType[])
+  const [count, setCount] = useState(NaN)
+  const [isVisible, setIsVisible] = useState(false)
   const [form] = Form.useForm()
+  const order = useSelector<AppState, OrderState>((state) => state.order)
+  console.log('order=====', order)
+  const initDataSource = () => {
+    const tableData: DataType[] = [
+      {
+        key: 0,
+        regionArea: order.expressRegion.renderData,
+        firstCount: 0,
+        firstPrice: 0,
+        nextCount: 0,
+        nextPrice: 0
+      }
+    ]
+    // console.log('tableData[0].regionArea=====', tableData[0].regionArea)
+    setDataSource(tableData)
+  }
+  const openRegionModal = () => {
+    setIsVisible(true)
+    // setIsVisible(order.expressRegion.isVisible)
+  }
+  console.log('isVisible===', isVisible)
   const columns: (ColumnTypes[number] & { editable?: boolean; dataIndex: string })[] = [
     {
       title: '运送到',
       dataIndex: 'regionArea',
       key: 'regionArea',
       render: (_, record: any) => {
-        // console.log('record========')
-        // console.log(record)
-        return <Button>编辑</Button>
+        console.log('record========', record)
+        return (
+          <>
+            <span>{record.regionArea}</span>
+            <Button onClick={openRegionModal}>编辑</Button>
+          </>
+        )
       }
     },
     {
@@ -197,8 +232,6 @@ const Express: React.FC<EditableTableProps> = () => {
     }
   ]
   const handleDelete = (key: React.Key) => {
-    // console.log('key=====')
-    // console.log(key)
     const data: DataType[] = [...dataSource]
     setDataSource(data.filter((item: DataType) => item.key !== key))
   }
@@ -247,14 +280,6 @@ const Express: React.FC<EditableTableProps> = () => {
       })
     }
   })
-
-  useEffect(() => {
-    const getCompany = async () => {
-      const data: any = await company()
-      setCompanyData(data.data)
-    }
-    getCompany()
-  }, [companyData.length])
   //表单提交方法
   const onFinish = (values: any) => {
     console.log('values=========')
@@ -274,7 +299,17 @@ const Express: React.FC<EditableTableProps> = () => {
   const onCompanyChange = () => {
     //
   }
-  console.log(companyData[0])
+  useEffect(() => {
+    const getCompany = async () => {
+      const data: any = await company()
+      setCompanyData(data.data)
+    }
+    getCompany()
+  }, [companyData.length])
+  useEffect(() => {
+    initDataSource()
+  }, [order.expressRegion.renderData])
+  // console.log(companyData[0])
   return (
     <LayoutMenu>
       <Form
@@ -377,7 +412,7 @@ const Express: React.FC<EditableTableProps> = () => {
           </Button>
         </Form.Item>
       </Form>
-      <RegionModal isVisible={true} />
+      <RegionModal isVisible={isVisible} serverData={regionData} />
     </LayoutMenu>
   )
 }

@@ -11,7 +11,7 @@ import { listSpecByCategoryId } from '../../../api/good'
 const AddGood = () => {
   // const [isReady, setIsReady] = useState(false)
   const [listSpec, setListSpec] = useState({})
-  // 获取登录结果
+  // 获取结果
   const good = useSelector<AppState, GoodState>((state) => state.good)
   console.log(good)
   let data
