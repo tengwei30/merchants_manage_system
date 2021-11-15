@@ -2,7 +2,7 @@ import { OrderUnionType } from '../actions/order.actions'
 import { ServerData } from '../models/order'
 export interface OrderState {
   expressRegion: {
-    id?: number
+    targetKey: number
     serverData: ServerData[]
     renderData: string
     isVisible: boolean
@@ -11,7 +11,7 @@ export interface OrderState {
 
 const initState = {
   expressRegion: {
-    id: NaN,
+    targetKey: 0,
     serverData: [] as ServerData[],
     renderData: '',
     isVisible: false
@@ -24,10 +24,25 @@ export default function OrderReducer(state: OrderState = initState, action: Orde
       return {
         ...state,
         expressRegion: {
-          id: action.id || NaN,
+          ...state.expressRegion,
           serverData: action.serverData as ServerData[],
-          renderData: action.renderData,
+          renderData: action.renderData
+        }
+      }
+    case 'IS_EXPRESS_REGION_MODAL_SHOW':
+      return {
+        ...state,
+        expressRegion: {
+          ...state.expressRegion,
           isVisible: action.isVisible
+        }
+      }
+    case 'SET_EXPRESS_REGION_KEY':
+      return {
+        ...state,
+        expressRegion: {
+          ...state.expressRegion,
+          targetKey: action.targetKey
         }
       }
     default:

@@ -8,6 +8,11 @@ import { useDispatch, useSelector } from 'react-redux'
 import { AppState } from '../../../store/reduces'
 import { OrderState } from '../../../store/reduces/order.reducer'
 import { ServerData } from '../../../store/models/order'
+import {
+  setExpressRegion,
+  isExpressRegionModalShow,
+  setExpressRegionKey
+} from '../../../store/actions/order.actions'
 import styles from '../express/index.module.css'
 const { Option } = Select
 const layout = {
@@ -32,7 +37,7 @@ const tailLayout = {
 //     ]
 //   }
 // ]
-const regionData: ServerData[] = []
+
 //-----------
 const EditableContext = React.createContext<FormInstance<any> | null>(null)
 
@@ -137,6 +142,7 @@ interface DataType {
   firstPrice: number
   nextCount: number
   nextPrice: number
+  merchantExpressTemplateItemRegionDetailList: ServerData[]
 }
 
 interface EditableTableState {
@@ -149,41 +155,70 @@ type ColumnTypes = Exclude<EditableTableProps['columns'], undefined>
 const Express: React.FC<EditableTableProps> = () => {
   const [companyData, setCompanyData] = useState([])
   const [dataSource, setDataSource] = useState([] as DataType[])
-  const [count, setCount] = useState(NaN)
+  const [count, setCount] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
+  const [regionData, setRegionData] = useState([] as ServerData[])
   const [form] = Form.useForm()
   const order = useSelector<AppState, OrderState>((state) => state.order)
-  console.log('order=====', order)
+  // 获取dispatch
+  const dispatch = useDispatch()
   const initDataSource = () => {
+    //初始化‘指定城市, 区域运费’
     const tableData: DataType[] = [
       {
-        key: 0,
+        key: count,
         regionArea: order.expressRegion.renderData,
         firstCount: 0,
         firstPrice: 0,
         nextCount: 0,
-        nextPrice: 0
+        nextPrice: 0,
+        merchantExpressTemplateItemRegionDetailList: []
       }
     ]
-    // console.log('tableData[0].regionArea=====', tableData[0].regionArea)
     setDataSource(tableData)
+    setCount(count + 1)
   }
-  const openRegionModal = () => {
+  //编辑地区
+  const openRegionModal = (data: DataType) => {
     setIsVisible(true)
-    // setIsVisible(order.expressRegion.isVisible)
+    // console.log('data========', data)
+    // const indexs: any = data.key
+    // console.log('dataSource=====', dataSource)
+    const targetData: DataType | undefined = dataSource.find((item) => {
+      return item.key === data.key
+    })
+    console.log('targetData====', targetData)
+    //设置弹窗初始值
+    if (targetData) {
+      setRegionData(targetData.merchantExpressTemplateItemRegionDetailList)
+      dispatch(
+        setExpressRegion(
+          targetData.merchantExpressTemplateItemRegionDetailList,
+          targetData.regionArea
+        )
+      )
+    }
+    // console.log('data.key====', data.key)
+    dispatch(setExpressRegionKey(data.key as number))
+    dispatch(isExpressRegionModalShow(true))
   }
-  console.log('isVisible===', isVisible)
   const columns: (ColumnTypes[number] & { editable?: boolean; dataIndex: string })[] = [
     {
       title: '运送到',
       dataIndex: 'regionArea',
       key: 'regionArea',
       render: (_, record: any) => {
-        console.log('record========', record)
+        // console.log('186---record========', record)
         return (
           <>
             <span>{record.regionArea}</span>
-            <Button onClick={openRegionModal}>编辑</Button>
+            <Button
+              onClick={(e) => {
+                openRegionModal(record as DataType)
+              }}
+            >
+              编辑
+            </Button>
           </>
         )
       }
@@ -235,7 +270,7 @@ const Express: React.FC<EditableTableProps> = () => {
     const data: DataType[] = [...dataSource]
     setDataSource(data.filter((item: DataType) => item.key !== key))
   }
-
+  //增加运费区域配置
   const handleAdd = () => {
     const newData: DataType = {
       key: count,
@@ -243,9 +278,11 @@ const Express: React.FC<EditableTableProps> = () => {
       firstCount: 0,
       firstPrice: 0,
       nextCount: 0,
-      nextPrice: 0
+      nextPrice: 0,
+      merchantExpressTemplateItemRegionDetailList: []
     }
     setDataSource([...dataSource, newData])
+    // console.log('add====', dataSource)
     setCount(count + 1)
   }
 
@@ -282,9 +319,9 @@ const Express: React.FC<EditableTableProps> = () => {
   })
   //表单提交方法
   const onFinish = (values: any) => {
-    console.log('values=========')
-    console.log(values)
-    console.log('dataSource=========')
+    // console.log('values=========')
+    // console.log(values)
+    // console.log('dataSource=========')
     console.log(dataSource)
   }
   //配置默认提示语
@@ -305,11 +342,32 @@ const Express: React.FC<EditableTableProps> = () => {
       setCompanyData(data.data)
     }
     getCompany()
-  }, [companyData.length])
+  }, [])
+  //当编辑地区时，更新dataSource
+  useEffect(() => {
+    let newData = [...dataSource]
+    // console.log('newData==before==', newData)
+    const targetIndex: number = newData.findIndex((item) => {
+      return order.expressRegion.targetKey === item.key
+    })
+    // console.log('order.expressRegion===', order.expressRegion)
+    if (targetIndex > -1) {
+      Object.assign(newData[targetIndex], {
+        regionArea: order.expressRegion.renderData as string,
+        merchantExpressTemplateItemRegionDetailList: order.expressRegion.serverData
+      })
+      // console.log('newData====', newData)
+      setDataSource(newData)
+    }
+  }, [order.expressRegion.targetKey, order.expressRegion.renderData])
+  useEffect(() => {
+    setIsVisible(order.expressRegion.isVisible)
+  }, [order.expressRegion.isVisible])
   useEffect(() => {
     initDataSource()
-  }, [order.expressRegion.renderData])
-  // console.log(companyData[0])
+  }, [])
+  // console.log('order.expressRegion=====render====', order.expressRegion)
+  // console.log('regionData===render====', regionData)
   return (
     <LayoutMenu>
       <Form

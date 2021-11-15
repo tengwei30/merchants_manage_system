@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { Modal, Button, Checkbox, Row, Col, message } from 'antd'
 import { region } from '../../../../api/order'
 import { useDispatch, useSelector } from 'react-redux'
-import { setExpressRegion } from '../../../../store/actions/order.actions'
+import { setExpressRegion, isExpressRegionModalShow } from '../../../../store/actions/order.actions'
 import { ServerData, SubServerItem } from '../../../../store/models/order'
-// import { AppState } from '../../../store/reduces'
-// import { OrderState } from '../../../store/reduces/order.reducer'
+import { AppState } from '../../../../store/reduces'
+import { OrderState } from '../../../../store/reduces/order.reducer'
 import styles from '../../express/components/RegionModal.module.css'
 const CheckboxGroup = Checkbox.Group
 
@@ -53,7 +53,8 @@ interface RegionModalProps {
 const RegionModal: React.FC<RegionModalProps> = ({ isVisible, serverData }) => {
   const [isModalVisible, setIsModalVisible] = useState(isVisible)
   const [regionData, setRegionData] = useState([] as RegionData[]) //页面交互数据
-  const [currentKey, setCurrentKey] = useState(NaN) //当前点击的省
+  const [currentKey, setCurrentKey] = useState(0) //当前点击的省
+  const order = useSelector<AppState, OrderState>((state) => state.order)
   // 获取dispatch
   const dispatch = useDispatch()
   //初始化regionData
@@ -109,45 +110,73 @@ const RegionModal: React.FC<RegionModalProps> = ({ isVisible, serverData }) => {
     })
     return subData as RegionData
   }
-  //编辑时，格式化后端返回的数据
+  //编辑时，格式化后端返回的数据，数据回显
   const renderServerData = () => {
-    if (!serverData) {
+    // if (!serverData || !serverData.length) {
+    //   let data = [...regionData]
+    //   data.map((item) => {
+    //     Object.assign(item, {
+    //       indeterminate: false,
+    //       checkAll: false,
+    //       checkedList: []
+    //     })
+    //   })
+    //   setRegionData(data)
+    //   return
+    // }
+    // let dataFromServer: RegionData[] = []
+    console.log('serverData==128==', serverData)
+    let newRegionData = [...regionData]
+    //渲染数据重置
+    newRegionData.map((item) => {
+      Object.assign(item, {
+        indeterminate: false,
+        checkAll: false,
+        checkedList: []
+      })
+    })
+    if (!serverData || !serverData.length) {
       return
     }
-    let dataFromServer: RegionData[] = []
-    console.log('serverData====', serverData)
     serverData.map(async (item) => {
-      const targetIndex = regionData.findIndex((regionItem) => {
+      const targetIndex = newRegionData.findIndex((regionItem) => {
         return item.regionCode === regionItem.code
       })
       if (targetIndex < 0) {
         return
       }
-      const plainOptions = await resetRegionItem(regionData[targetIndex])
-      let checkedList: string[] = []
-      item.subMerchantExpressTemplateItemRegionDetailList.map((subServerItem: SubServerItem) => {
-        checkedList.push(subServerItem.regionName)
-      })
-      const checkAll = plainOptions.length === checkedList.length
-      let newData = regionData[targetIndex]
-      Object.assign(newData, {
-        indeterminate: !checkAll, //判断生成
-        checkAll, //判断生成
-        checkedList, //选中的市--- //循环市数据生成
-        plainOptions
-      })
-      dataFromServer.push(newData)
+      //直辖市处理
+      if (isMunicipality(newRegionData[targetIndex])) {
+        Object.assign(newRegionData[targetIndex], {
+          indeterminate: false, //判断生成
+          checkAll: true, //判断生成
+          checkedList: [], //选中的市--- //循环市数据生成
+          plainOptions: []
+        })
+      } else {
+        const plainOptions = await resetRegionItem(newRegionData[targetIndex])
+        let checkedList: string[] = []
+        item.subMerchantExpressTemplateItemRegionDetailList.map((subServerItem: SubServerItem) => {
+          checkedList.push(subServerItem.regionName)
+        })
+        const checkAll = plainOptions.length === checkedList.length
+        Object.assign(newRegionData[targetIndex], {
+          indeterminate: !checkAll, //判断生成
+          checkAll, //判断生成
+          checkedList, //选中的市--- //循环市数据生成
+          plainOptions
+        })
+      }
+      setRegionData(newRegionData)
     })
-    let newRegionData = [...regionData]
-    Object.assign(newRegionData, dataFromServer)
-    setRegionData(newRegionData)
+    console.log('newRegionData=====153', newRegionData)
   }
   //格式化选中的省及其市区数据，传给后端接口
   const formetRegionData = () => {
     let mainData: ServerData[] = []
     regionData.map((item) => {
       let subData: SubServerItem[] = []
-      console.log('item====', item)
+      // console.log('item====', item)
       //过滤未选中的省，且不是直辖市
       if (!item.checkAll && !item.indeterminate) {
         return
@@ -157,11 +186,13 @@ const RegionModal: React.FC<RegionModalProps> = ({ isVisible, serverData }) => {
           const checkedIndex = item.checkedList.findIndex((checkedItem) => {
             return checkedItem === subItem.name
           })
-          subData.push({
-            ifSlected: checkedIndex > -1,
-            regionCode: subItem.code,
-            regionName: subItem.name
-          })
+          if (checkedIndex > -1) {
+            subData.push({
+              ifSlected: checkedIndex > -1,
+              regionCode: subItem.code,
+              regionName: subItem.name
+            })
+          }
         })
       }
       mainData.push({
@@ -172,8 +203,6 @@ const RegionModal: React.FC<RegionModalProps> = ({ isVisible, serverData }) => {
       })
     })
     //生成展示值
-    console.log('mainData=====', mainData)
-    dispatch(setExpressRegion(mainData, '123', isModalVisible))
     return mainData
   }
   const showModal = () => {
@@ -183,12 +212,27 @@ const RegionModal: React.FC<RegionModalProps> = ({ isVisible, serverData }) => {
   const handleOk = () => {
     setIsModalVisible(false)
     const data = formetRegionData()
-    console.log('data======', data)
+    let dataValues: string[] = []
+    data.map((item) => {
+      const subList = item.subMerchantExpressTemplateItemRegionDetailList
+      if (subList.length) {
+        subList.map((subItem) => {
+          dataValues.push(subItem.regionName)
+        })
+      } else {
+        dataValues.push(item.regionName)
+      }
+    })
+    // console.log('dataValues====', dataValues.join(','))
+    console.log('order.expressRegion===pop==save======', order.expressRegion)
+    dispatch(setExpressRegion(data, dataValues.join(',')))
+    dispatch(isExpressRegionModalShow(false))
     //数据转换成接口数据
   }
 
   const handleCancel = () => {
     setIsModalVisible(false)
+    dispatch(isExpressRegionModalShow(false))
   }
   //市多选框
   function onCheckSubChange(list: any, subData: RegionData) {
@@ -247,15 +291,23 @@ const RegionModal: React.FC<RegionModalProps> = ({ isVisible, serverData }) => {
       ''
     )
   }
+  // const resetRegionData = () => {
+  //   if(!serverData.length){
+  //     //重置regionData，不选择任何选项
+  //   }
+  // }
   useEffect(() => {
     initRegionData() //初始化渲染数据
-    renderServerData() //回显server端数据
   }, [])
   useEffect(() => {
     setIsModalVisible(isVisible)
   }, [isVisible])
-  console.log('isVisible====', isVisible)
-  // console.log('regionData====', regionData)
+  useEffect(() => {
+    console.log('serverData===pop====', serverData)
+    renderServerData() //回显server端数据
+  }, [order.expressRegion.targetKey, order.expressRegion.renderData])
+  // console.log('isVisible====', isVisible)
+  // console.log('regionData===pop====', regionData)
   //存储生成的server端数据，及页面回显数据到store中，
   return (
     <Modal title="选择地区" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
