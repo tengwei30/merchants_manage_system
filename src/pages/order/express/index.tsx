@@ -5,6 +5,7 @@ import moment from 'moment'
 import 'moment/locale/zh-cn'
 moment.locale('zh-cn')
 import LayoutMenu from '../../../components/DashBoard'
+import { withRouter, Link } from 'react-router-dom'
 import { Redirect } from 'react-router'
 import styles from '.'
 import { useStore } from 'react-redux'
@@ -73,6 +74,7 @@ const Express = (props: any) => {
   ]
   const goTemplate = () => {
     console.log('props======', props)
+    props.history.push('/order/expressTemplate')
     // return <Redirect to="/order/expressTemplate/1017" />
   }
   const onEdit = (data: DataType) => {
@@ -88,6 +90,9 @@ const Express = (props: any) => {
   const getTableData = async (props: object = {}) => {
     const result: any = await templateList({ ...props })
     console.log('result====', result)
+    if (!result.data.items.length) {
+      return
+    }
     const data: DataType[] = result.data.items
     data.map((item) => {
       item.key = item.id.toString()
@@ -146,4 +151,4 @@ const Express = (props: any) => {
   )
 }
 
-export default Express
+export default withRouter(Express)

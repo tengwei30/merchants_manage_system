@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useContext } from 'react'
 import { Form, Select, Row, Col, Input, Button, Cascader, Table, Popconfirm, Modal } from 'antd'
 import { FormInstance } from 'antd/lib/form'
+import { withRouter, Link, RouteComponentProps } from 'react-router-dom'
 import LayoutMenu from '../../../components/DashBoard'
 import RegionModal from '../expressTemplate/components/RegionModal'
 import { company } from '../../../api/order'
@@ -13,7 +14,7 @@ import {
   isExpressRegionModalShow,
   setExpressRegionKey
 } from '../../../store/actions/order.actions'
-import { templateSave } from '../../../api/order'
+import { templateSave, templateDetail } from '../../../api/order'
 import styles from '../expressTemplate/index.module.css'
 const { Option } = Select
 const layout = {
@@ -154,7 +155,7 @@ interface EditableTableState {
 
 type ColumnTypes = Exclude<EditableTableProps['columns'], undefined>
 //-----------
-const ExpressTemplate: React.FC<EditableTableProps> = (props) => {
+const ExpressTemplate = (props: any) => {
   const [companyData, setCompanyData] = useState([])
   const [dataSource, setDataSource] = useState([] as DataType[])
   const [count, setCount] = useState(0)
@@ -343,8 +344,13 @@ const ExpressTemplate: React.FC<EditableTableProps> = (props) => {
       ]
     }
     // console.log('data====', data)
-    const result = await templateSave(data)
+    const result: any = await templateSave(data)
     // console.log('result====', result)
+    if (result.code === '000000') {
+      props.history.push('/order/express')
+    } else {
+      console.log(result.msg || '出错了！')
+    }
   }
   //配置默认提示语
   const validateMessages = {
@@ -357,6 +363,9 @@ const ExpressTemplate: React.FC<EditableTableProps> = (props) => {
   }
   const onCompanyChange = () => {
     //
+  }
+  const getTemplateData = async () => {
+    const result = await templateDetail({id: '1017'})
   }
   useEffect(() => {
     const getCompany = async () => {
@@ -496,4 +505,4 @@ const ExpressTemplate: React.FC<EditableTableProps> = (props) => {
     </LayoutMenu>
   )
 }
-export default ExpressTemplate
+export default withRouter(ExpressTemplate)
