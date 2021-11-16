@@ -21,11 +21,11 @@ export const getMenu = (slideBarConfig: SlideItem[]) => {
           {item.children.map((inner) => {
             return inner.children && inner.children.length > 0 ? (
               getMenu(inner.children)
+            ) : inner.noSideItem ? (
+              ''
             ) : (
               <Menu.Item key={inner.url}>
-                <Link to={inner.url}>
-                  {inner.name} {inner.noSideItem}
-                </Link>
+                <Link to={inner.url}>{inner.name}</Link>
               </Menu.Item>
             )
           })}
