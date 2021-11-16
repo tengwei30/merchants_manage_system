@@ -5,7 +5,7 @@ import zhCN from 'antd/es/locale/zh_CN'
 import moment from 'moment'
 import 'moment/locale/zh-cn'
 moment.locale('zh-cn')
-import { getDetail } from '../../../api/afterSales'
+import { getDetail, handleSave, getListSameLLevel } from '../../../api/afterSales'
 import './index.css'
 const { Option } = Select
 const columns = [
@@ -19,7 +19,7 @@ const columns = [
   },
   {
     title: '所在地区',
-    dataIndex: 'district'
+    dataIndex: 'addreDetail'
   },
   {
     title: '电话',
@@ -31,14 +31,6 @@ const columns = [
     render: (text: string) => <a>{text}</a>
   }
 ]
-interface DataType {
-  key: React.Key
-  name?: String
-  address?: String
-  district?: String
-  phone?: Number
-  operate?: String
-}
 const DeliverySet = () => {
   const [isModalVisible, setIsModalVisible] = React.useState(false)
   const [dataArr, setDataArr] = React.useState([])
@@ -56,21 +48,39 @@ const DeliverySet = () => {
   const fetchData = () => {
     getDetail().then((res: any) => {
       const obj: any = res.data.data
+      const arr = obj.merchantAddressDetailInfo.region
+      const province: String = arr.name
+      const city: String = arr.subRegion.name
+      const district: String = arr.subRegion.subRegion.name
+      const county =
+        arr.subRegion.subRegion.subRegion == null ? '' : arr.subRegion.subRegion.subRegion.name
       const data: any = [
         {
           key: obj.id,
           name: obj.contacts,
           address: '默认',
-          district: '111111' + obj.merchantAddressDetailInfo.detail,
-          phone: 18889898989,
+          addreDetail:
+            `${province}` +
+            `${city}` +
+            `${district}` +
+            `${county}` +
+            obj.merchantAddressDetailInfo.detail,
+          phone: obj.contactMobile,
           operate: '编辑'
         }
       ]
       setDataArr(data)
     })
   }
+  const fetchAdress = () => {
+    console.log(1)
+    getListSameLLevel({}).then((res: any) => {
+      console.log(res.data.data)
+    })
+  }
   React.useEffect(() => {
-    fetchData()
+    //fetchData()
+    fetchAdress()
   }, [])
 
   const [form] = Form.useForm()
