@@ -5,7 +5,7 @@ import { withRouter, Link, RouteComponentProps } from 'react-router-dom'
 import LayoutMenu from '../../../components/DashBoard'
 import RegionModal from '../expressTemplate/components/RegionModal'
 import { company } from '../../../api/order'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch, useSelector, useStore } from 'react-redux'
 import { AppState } from '../../../store/reduces'
 import { OrderState } from '../../../store/reduces/order.reducer'
 import { ServerData } from '../../../store/models/order'
@@ -146,6 +146,7 @@ interface DataType {
   nextPrice: number
   ifDefault: number
   merchantExpressTemplateItemRegionDetailList: ServerData[]
+  [propName: string]: any
 }
 
 interface EditableTableState {
@@ -161,12 +162,21 @@ const ExpressTemplate = (props: any) => {
   const [count, setCount] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
   const [regionData, setRegionData] = useState([] as ServerData[])
+  // const [initialValues, setInitialValues] = useState({})
   const [form] = Form.useForm()
   const order = useSelector<AppState, OrderState>((state) => state.order)
   // 获取dispatch
   const dispatch = useDispatch()
-  console.log('props====', props)
   const initDataSource = () => {
+    form.setFieldsValue({
+      name: '',
+      deliveryCompany: 'EMS',
+      deliveryDuration: '24小时内',
+      firstCount: 0,
+      firstPrice: 0,
+      nextCount: 0,
+      nextPrice: 0
+    })
     //初始化‘指定城市, 区域运费’
     const tableData: DataType[] = [
       {
@@ -212,6 +222,7 @@ const ExpressTemplate = (props: any) => {
       title: '运送到',
       dataIndex: 'regionArea',
       key: 'regionArea',
+      width: 500,
       render: (_, record: any) => {
         // console.log('186---record========', record)
         return (
@@ -325,9 +336,8 @@ const ExpressTemplate = (props: any) => {
   })
   //表单提交方法
   const onFinish = async (values: any) => {
-    // console.log('values=========', values)
-    // console.log('dataSource=========', dataSource)
     const data = {
+      id: parseInt(props.computedMatch.params.id) || NaN,
       name: values.name,
       deliveryCompany: values.deliveryCompany,
       deliveryDuration: values.deliveryDuration,
@@ -361,33 +371,69 @@ const ExpressTemplate = (props: any) => {
   const onFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo)
   }
-  const onCompanyChange = () => {
-    //
-  }
-  const getTemplateData = async () => {
-    const result = await templateDetail({id: '1017'})
-  }
-  useEffect(() => {
-    const getCompany = async () => {
-      const data: any = await company()
-      setCompanyData(data.data)
+  //根据id，获取模版详情数据,并初始化页面
+  const getTemplateDetail = async (id: number) => {
+    const result: any = await templateDetail({ id })
+    if (result.code === '000000') {
+      const itemList = result.data.merchantExpressTemplateItemList
+      form.setFieldsValue({
+        name: result.data.name,
+        deliveryCompany: result.data.deliveryCompany,
+        deliveryDuration: result.data.deliveryDuration,
+        firstCount: itemList[0].firstCount,
+        firstPrice: itemList[0].firstPrice,
+        nextCount: itemList[0].nextCount,
+        nextPrice: itemList[0].nextPrice
+      })
+      itemList.shift()
+      // key: count,
+      // regionArea: '',
+      // firstCount: 0,
+      // firstPrice: 0,
+      // nextCount: 0,
+      // nextPrice: 0,
+      // ifDefault: 0,
+      // merchantExpressTemplateItemRegionDetailList: []
+      let newServerItem: DataType[] = []
+      itemList.map((item: any, index: number) => {
+        let serverItem: DataType = {
+          key: index,
+          regionArea: '',
+          firstCount: item.firstCount,
+          firstPrice: item.firstPrice,
+          nextCount: item.nextCount,
+          nextPrice: item.nextPrice,
+          ifDefault: 0,
+          merchantExpressTemplateItemRegionDetailList: item.merchantExpressTemplateItemRegionDetailList
+        }
+        // serverItem.merchantExpressTemplateItemRegionDetailList = item.merchantExpressTemplateItemRegionDetailList
+        item.merchantExpressTemplateItemRegionDetailList((detailItem: any) => {
+          if (detailItem.subMerchantExpressTemplateItemRegionDetailList.length) {
+            serverItem.regionArea +=
+              detailItem.subMerchantExpressTemplateItemRegionDetailList.join(',')
+          }
+        })
+        newServerItem.push(serverItem)
+      })
+      setCount(newServerItem.length)
+      // console.log('itemList=====', itemList)
+      setDataSource(newServerItem) //同时要存储到store的order中
+      // dispatch(
+      //   setExpressRegion(itemList.merchantExpressTemplateItemRegionDetailList, itemList.regionArea)
+      // )
     }
-    getCompany()
-  }, [])
+  }
   //当编辑地区时，更新dataSource
   useEffect(() => {
     let newData = [...dataSource]
-    // console.log('newData==before==', newData)
     const targetIndex: number = newData.findIndex((item) => {
       return order.expressRegion.targetKey === item.key
     })
-    // console.log('order.expressRegion===', order.expressRegion)
     if (targetIndex > -1) {
       Object.assign(newData[targetIndex], {
         regionArea: order.expressRegion.renderData as string,
         merchantExpressTemplateItemRegionDetailList: order.expressRegion.serverData
       })
-      // console.log('newData====', newData)
       setDataSource(newData)
     }
   }, [order.expressRegion.targetKey, order.expressRegion.renderData])
@@ -395,9 +441,23 @@ const ExpressTemplate = (props: any) => {
     setIsVisible(order.expressRegion.isVisible)
   }, [order.expressRegion.isVisible])
   useEffect(() => {
-    initDataSource()
+    // console.log('props=======', props)
+    const getCompany = async () => {
+      const data: any = await company()
+      setCompanyData(data.data)
+      //初始化页面渲染数据
+      if (props.computedMatch.params.id) {
+        //修改
+        getTemplateDetail(props.computedMatch.params.id)
+      } else {
+        //添加
+        initDataSource()
+      }
+    }
+    getCompany()
   }, [])
-  // console.log('order.expressRegion=====render====', order.expressRegion)
+  // console.log('initialValues====', initialValues)
+  console.log('order.expressRegion=====render====', order.expressRegion)
   // console.log('regionData===render====', regionData)
   return (
     <LayoutMenu>
@@ -405,14 +465,7 @@ const ExpressTemplate = (props: any) => {
         {...layout}
         form={form}
         name="basicForm"
-        initialValues={{
-          deliveryCompany: 'EMS',
-          deliveryDuration: '24h',
-          firstCount: 0,
-          firstPrice: 0,
-          nextCount: 0,
-          nextPrice: 0
-        }}
+        // initialValues={initialValues}
         validateMessages={validateMessages}
         onFinish={onFinish}
       >
@@ -432,7 +485,7 @@ const ExpressTemplate = (props: any) => {
               <Input />
             </Form.Item>
             <Form.Item name="deliveryCompany" label="物流公司名称">
-              <Select onChange={onCompanyChange} style={{ width: 200 }}>
+              <Select style={{ width: 200 }}>
                 {companyData.map((item, index) => {
                   return (
                     <Option key={item} value={item}>
@@ -444,8 +497,8 @@ const ExpressTemplate = (props: any) => {
             </Form.Item>
             <Form.Item name="deliveryDuration" label="发货时间">
               <Select style={{ width: 200 }}>
-                <Option value="24h">24小时</Option>
-                <Option value="48h">48小时</Option>
+                <Option value="24小时内">24小时内</Option>
+                <Option value="28小时内">48小时内</Option>
               </Select>
             </Form.Item>
           </div>
@@ -456,25 +509,25 @@ const ExpressTemplate = (props: any) => {
               <Row>
                 <Col span={5}>
                   <Form.Item name="firstCount" style={{ display: 'inline-block' }}>
-                    <input />
+                    <Input />
                   </Form.Item>
                   <span style={{ lineHeight: '30px' }}>件内</span>
                 </Col>
                 <Col span={6}>
                   <Form.Item name="firstPrice" style={{ display: 'inline-block' }}>
-                    <input />
+                    <Input />
                   </Form.Item>
                   <span style={{ lineHeight: '30px' }}>元，每增加</span>
                 </Col>
                 <Col span={7}>
                   <Form.Item name="nextCount" style={{ display: 'inline-block' }}>
-                    <input />
+                    <Input />
                   </Form.Item>
                   <span style={{ lineHeight: '30px' }}>件，增加运费</span>
                 </Col>
                 <Col span={6}>
                   <Form.Item name="nextPrice" style={{ display: 'inline-block' }}>
-                    <input />
+                    <Input />
                   </Form.Item>
                   <span style={{ lineHeight: '30px' }}>元</span>
                 </Col>

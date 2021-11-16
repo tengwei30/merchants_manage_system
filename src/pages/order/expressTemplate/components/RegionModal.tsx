@@ -6,6 +6,7 @@ import { setExpressRegion, isExpressRegionModalShow } from '../../../../store/ac
 import { ServerData, SubServerItem } from '../../../../store/models/order'
 import { AppState } from '../../../../store/reduces'
 import { OrderState } from '../../../../store/reduces/order.reducer'
+import useDeepCompareEffect from 'use-deep-compare-effect'
 import styles from '../components/RegionModal.module.css'
 const CheckboxGroup = Checkbox.Group
 
@@ -112,7 +113,7 @@ const RegionModal: React.FC<RegionModalProps> = ({ isVisible, serverData }) => {
   }
   //编辑时，格式化后端返回的数据，数据回显
   const renderServerData = () => {
-    // console.log('serverData==128==', serverData)
+    console.log('serverData==128===================')
     let newRegionData = [...regionData]
     //渲染数据重置
     newRegionData.map((item) => {
@@ -122,10 +123,12 @@ const RegionModal: React.FC<RegionModalProps> = ({ isVisible, serverData }) => {
         checkedList: []
       })
     })
+    // console.log('126======', serverData)
     if (!serverData || !serverData.length) {
       return
     }
     serverData.map(async (item) => {
+      console.log('130======')
       const targetIndex = newRegionData.findIndex((regionItem) => {
         return item.regionCode === regionItem.code
       })
@@ -140,24 +143,30 @@ const RegionModal: React.FC<RegionModalProps> = ({ isVisible, serverData }) => {
           checkedList: [], //选中的市--- //循环市数据生成
           plainOptions: []
         })
+        setRegionData(newRegionData)
       } else {
-        const plainOptions = await resetRegionItem(newRegionData[targetIndex])
+        //如果回显的市，还没加载，就去请求后端接口，加载市数据
+        const resetData = await resetRegionItem(newRegionData[targetIndex])
         let checkedList: string[] = []
         item.subMerchantExpressTemplateItemRegionDetailList.map((subServerItem: SubServerItem) => {
           checkedList.push(subServerItem.regionName)
         })
-        const checkAll = plainOptions.length === checkedList.length
+        // console.log('newRegionData===targetIndex====', newRegionData[targetIndex])
+        // console.log(resetData.plainOptions.length, checkedList.length)
+        const checkAll = resetData.plainOptions.length === checkedList.length
         Object.assign(newRegionData[targetIndex], {
           indeterminate: !checkAll, //判断生成
           checkAll, //判断生成
           checkedList, //选中的市--- //循环市数据生成
-          plainOptions
+          plainOptions: resetData.plainOptions
         })
+        const data = [...newRegionData]
+        setRegionData(data)
       }
-      setRegionData(newRegionData)
     })
-    // console.log('newRegionData=====153', newRegionData)
+    //
   }
+  // console.log('regionData=====153', regionData)
   //格式化选中的省及其市区数据，传给后端接口
   const formetRegionData = () => {
     let mainData: ServerData[] = []
@@ -175,7 +184,7 @@ const RegionModal: React.FC<RegionModalProps> = ({ isVisible, serverData }) => {
           })
           if (checkedIndex > -1) {
             subData.push({
-              ifSlected: checkedIndex > -1,
+              // ifSlected: checkedIndex > -1,
               regionCode: subItem.code,
               regionName: subItem.name
             })
@@ -183,7 +192,7 @@ const RegionModal: React.FC<RegionModalProps> = ({ isVisible, serverData }) => {
         })
       }
       mainData.push({
-        ifSlected: !!item.checkedList.length || item.checkAll,
+        // ifSlected: !!item.checkedList.length || item.checkAll,
         regionCode: item.code,
         regionName: item.name,
         subMerchantExpressTemplateItemRegionDetailList: subData
@@ -289,12 +298,11 @@ const RegionModal: React.FC<RegionModalProps> = ({ isVisible, serverData }) => {
   useEffect(() => {
     setIsModalVisible(isVisible)
   }, [isVisible])
-  useEffect(() => {
+  useDeepCompareEffect(() => {
     // console.log('serverData===pop====', serverData)
     renderServerData() //回显server端数据
-  }, [order.expressRegion.targetKey, order.expressRegion.renderData])
-  // console.log('isVisible====', isVisible)
-  // console.log('regionData===pop====', regionData)
+  }, [serverData, regionData, order.expressRegion])
+  console.log('regionData===pop====', regionData)
   //存储生成的server端数据，及页面回显数据到store中，
   return (
     <Modal title="选择地区" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>

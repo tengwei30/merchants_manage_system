@@ -109,8 +109,7 @@ export const slideBarConfig: SlideItem[] = [
       },
       {
         name: '添加运费模版',
-        url: '/order/expressTemplate',
-        // url: '/order/expressTemplate',
+        url: '/order/expressTemplate/:id?',
         noSideItem: true,
         component: ExpressTemplate
       }
