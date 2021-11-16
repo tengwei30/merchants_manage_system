@@ -38,10 +38,9 @@ axios.interceptors.request.use(
   (config) => {
     const configTemp = Object.create(config)
     let token: string | null = window.localStorage.getItem('token')
-    // token && (configTemp.headers = Object.assign({}, configTemp.headers, JSON.parse(token)))
     Object.assign(configTemp.headers, {
       sessionId: token ? JSON.parse(token).sessionId : '',
-      'X-Client': ''
+      'X-Client': '{}'
     })
     configTemp.headers.common.eventTime = Date.now()
     // Do something before request is sent
@@ -55,8 +54,8 @@ axios.interceptors.response.use(
   (response: any) => {
     // 状态码为 2XX的都会走这
     if (response.data.code === '000004') {
-      window.location.href = ''
-      localStorage.removeItem('token')
+      // window.location.href = ''
+      // localStorage.removeItem('token')
     }
     return response.data
   },

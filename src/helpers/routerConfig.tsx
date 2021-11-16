@@ -13,6 +13,7 @@ import Refund from '../pages/afterSales/refund/index'
 import Exchange from '../pages/afterSales/exchange/index'
 import AddGood from '../pages/good/add-good'
 import Express from '../pages/order/express/index'
+import ExpressTemplate from '../pages/order/expressTemplate/index'
 
 export interface SlideItem {
   name: string
@@ -105,6 +106,13 @@ export const slideBarConfig: SlideItem[] = [
         name: '运费模版',
         url: '/order/express',
         component: Express
+      },
+      {
+        name: '添加运费模版',
+        url: '/order/expressTemplate',
+        // url: '/order/expressTemplate',
+        noSideItem: true,
+        component: ExpressTemplate
       }
     ]
   },

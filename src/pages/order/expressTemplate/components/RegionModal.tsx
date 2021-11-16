@@ -6,7 +6,7 @@ import { setExpressRegion, isExpressRegionModalShow } from '../../../../store/ac
 import { ServerData, SubServerItem } from '../../../../store/models/order'
 import { AppState } from '../../../../store/reduces'
 import { OrderState } from '../../../../store/reduces/order.reducer'
-import styles from '../../express/components/RegionModal.module.css'
+import styles from '../components/RegionModal.module.css'
 const CheckboxGroup = Checkbox.Group
 
 //页面渲染的数据结构
@@ -112,20 +112,7 @@ const RegionModal: React.FC<RegionModalProps> = ({ isVisible, serverData }) => {
   }
   //编辑时，格式化后端返回的数据，数据回显
   const renderServerData = () => {
-    // if (!serverData || !serverData.length) {
-    //   let data = [...regionData]
-    //   data.map((item) => {
-    //     Object.assign(item, {
-    //       indeterminate: false,
-    //       checkAll: false,
-    //       checkedList: []
-    //     })
-    //   })
-    //   setRegionData(data)
-    //   return
-    // }
-    // let dataFromServer: RegionData[] = []
-    console.log('serverData==128==', serverData)
+    // console.log('serverData==128==', serverData)
     let newRegionData = [...regionData]
     //渲染数据重置
     newRegionData.map((item) => {
@@ -169,7 +156,7 @@ const RegionModal: React.FC<RegionModalProps> = ({ isVisible, serverData }) => {
       }
       setRegionData(newRegionData)
     })
-    console.log('newRegionData=====153', newRegionData)
+    // console.log('newRegionData=====153', newRegionData)
   }
   //格式化选中的省及其市区数据，传给后端接口
   const formetRegionData = () => {
@@ -224,7 +211,7 @@ const RegionModal: React.FC<RegionModalProps> = ({ isVisible, serverData }) => {
       }
     })
     // console.log('dataValues====', dataValues.join(','))
-    console.log('order.expressRegion===pop==save======', order.expressRegion)
+    // console.log('order.expressRegion===pop==save======', order.expressRegion)
     dispatch(setExpressRegion(data, dataValues.join(',')))
     dispatch(isExpressRegionModalShow(false))
     //数据转换成接口数据
@@ -303,7 +290,7 @@ const RegionModal: React.FC<RegionModalProps> = ({ isVisible, serverData }) => {
     setIsModalVisible(isVisible)
   }, [isVisible])
   useEffect(() => {
-    console.log('serverData===pop====', serverData)
+    // console.log('serverData===pop====', serverData)
     renderServerData() //回显server端数据
   }, [order.expressRegion.targetKey, order.expressRegion.renderData])
   // console.log('isVisible====', isVisible)

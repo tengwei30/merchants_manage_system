@@ -11,11 +11,11 @@ function* hanldeSigin(action: SigninAction): any {
     let response = yield login(action.payload)
     // let response = yield action.payload
     console.log('response', response)
-    if (response.data.code === '000000') {
-      localStorage.setItem('token', JSON.stringify(response.data.data))
+    if (response.code === '000000') {
+      localStorage.setItem('token', JSON.stringify(response.data))
       yield put(signinSuccess())
     } else {
-      yield put(signinFail(response.data.msg))
+      yield put(signinFail(response.msg))
     }
   } catch (error) {
     console.error('---->', error)
