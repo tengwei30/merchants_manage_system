@@ -1,67 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Form, Row, Col, Input, Button, Cascader } from 'antd'
 import { CascaderValueType, CascaderOptionType } from 'antd/lib/cascader'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch, useSelector, useStore } from 'react-redux'
 import { setCategory } from '../../../store/actions/good.actions'
-const options = [
-  {
-    id: '003',
-    parentId: null,
-    specCollId: 1002,
-    value: '衣服',
-    label: '衣服',
-    level: 1,
-    sort: 0,
-    status: 1,
-    creater: null,
-    updator: null,
-    children: [
-      {
-        id: '003001',
-        parentId: '003',
-        specCollId: 1002,
-        value: '上衣',
-        label: '上衣',
-        level: 2,
-        sort: 0,
-        status: 1,
-        creater: null,
-        updator: null,
-        children: [
-          {
-            id: '003001001',
-            parentId: '003001',
-            specCollId: 1002,
-            value: '卫衣',
-            label: '卫衣',
-            level: 3,
-            sort: 0,
-            status: 1,
-            creater: null,
-            updator: null,
-            children: undefined
-          }
-        ]
-      },
-      {
-        id: '003002',
-        parentId: '003',
-        specCollId: 1002,
-        value: '裤子',
-        label: '裤子',
-        level: 2,
-        sort: 0,
-        status: 1,
-        creater: null,
-        updator: null,
-        children: undefined
-      }
-    ]
-  }
-]
+import { getAllCategory } from '../../../api/good'
 
 const Category = () => {
   const [categoryId, setCategoryId] = useState(NaN)
+  const [options, setOptions] = useState([] as object[])
   // 获取dispatch
   const dispatch = useDispatch()
   //选择商品分类
@@ -73,13 +19,78 @@ const Category = () => {
   //提交Form表单
   const onFinish = (values: any) => {
     dispatch(setCategory(categoryId, values.category))
-    // console.log('Success:', values)
   }
   //提交Form表单失败
   const onFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo)
   }
-
+  const initData = async () => {
+    // const result: any = await getAllCategory()
+    // if ((result.code = '000000')) {
+    //   setOptions(result.data)
+    // }
+    //启用假数据
+    const optionsData: object[] = [
+      {
+        id: '003',
+        parentId: null,
+        specCollId: 1002,
+        value: '衣服',
+        label: '衣服',
+        level: 1,
+        sort: 0,
+        status: 1,
+        creater: null,
+        updator: null,
+        children: [
+          {
+            id: '003001',
+            parentId: '003',
+            specCollId: 1002,
+            value: '上衣',
+            label: '上衣',
+            level: 2,
+            sort: 0,
+            status: 1,
+            creater: null,
+            updator: null,
+            children: [
+              {
+                id: '003001001',
+                parentId: '003001',
+                specCollId: 1002,
+                value: '卫衣',
+                label: '卫衣',
+                level: 3,
+                sort: 0,
+                status: 1,
+                creater: null,
+                updator: null,
+                children: undefined
+              }
+            ]
+          },
+          {
+            id: '003002',
+            parentId: '003',
+            specCollId: 1002,
+            value: '裤子',
+            label: '裤子',
+            level: 2,
+            sort: 0,
+            status: 1,
+            creater: null,
+            updator: null,
+            children: undefined
+          }
+        ]
+      }
+    ]
+    setOptions(optionsData)
+  }
+  useEffect(() => {
+    initData()
+  }, [])
   return (
     <Form
       name="basic"

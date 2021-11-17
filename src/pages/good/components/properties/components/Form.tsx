@@ -28,44 +28,13 @@ import BraftEditor from 'braft-editor'
 import 'braft-editor/dist/index.css'
 import styles from '../components/Form.module.css'
 import Uploader from '../../../components/properties/components/Uploader'
-const data = [
-  {
-    creater: '',
-    id: 1,
-    name: '颜色',
-    sort: 0,
-    specColleId: 10,
-    type: 1,
-    updator: '',
-    value: [
-      {
-        id: 1,
-        specColleId: 10,
-        specId: 2,
-        value: '白色'
-      }
-    ]
-  },
-  {
-    creater: '',
-    id: 2,
-    name: '尺寸',
-    sort: 0,
-    specColleId: 12,
-    type: 1,
-    updator: '',
-    value: [
-      {
-        id: 2,
-        specColleId: 12,
-        specId: 3,
-        value: 'L'
-      }
-    ]
-  }
-]
+import { useDispatch, useSelector } from 'react-redux'
+import { AppState } from '../../../../../store/reduces'
+import { GoodState } from '../../../../../store/reduces/good.reducer'
+import { listSpecByCategoryId, publish, pageByCondition } from '../../../../../api/good'
+import useDeepCompareEffect from 'use-deep-compare-effect'
+import SkuTable from '../components/SkuTable'
 const { Option } = Select
-let skuTableData = {}
 const layout = {
   labelCol: { span: 3 },
   wrapperCol: { span: 20 }
@@ -73,7 +42,22 @@ const layout = {
 const tailLayout = {
   wrapperCol: { offset: 8, span: 16 }
 }
-
+interface subListSpec {
+  id: number
+  specColleId: number
+  specId: number
+  value: string
+}
+interface ListSpec {
+  creater: string
+  id: number
+  name: string
+  sort: number
+  specColleId: number
+  type: number
+  updator: string
+  value: subListSpec[]
+}
 //定义添加规格值from表单参数接口--sku相关
 interface SkuFormProps {
   visible: boolean
@@ -116,364 +100,13 @@ const SkuForm: React.FC<SkuFormProps> = ({ visible, onCancel }) => {
     </Modal>
   )
 }
-//定义sku表格列接口
-interface SkuColumns {
-  name: string
-  id: number
-  value: []
-  editable: boolean
-  dataIndex: string
-  title: string
-  inputType: string
-}
-//定义sku表格数据项接口
-interface SkuDataSource {
-  key: string
-  price: number
-  stock: number
-  alertStock: number
-  [propName: string]: any
-}
-interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
-  editing: boolean
-  dataIndex: string
-  title: any
-  inputType: 'number' | 'text' | 'upload'
-  record: SkuDataSource
-  index: number
-  children: React.ReactNode
-}
 
-const EditableCell: React.FC<EditableCellProps> = ({
-  editing,
-  dataIndex,
-  title,
-  inputType,
-  record,
-  index,
-  children,
-  ...restProps
-}) => {
-  const inputNode = inputType === 'number' ? <InputNumber /> : <Input />
-  return (
-    <td {...restProps}>
-      {editing ? (
-        <Form.Item
-          name={dataIndex}
-          style={{ margin: 0 }}
-          rules={[
-            {
-              required: true,
-              message: `Please Input ${title}!`
-            }
-          ]}
-        >
-          {inputNode}
-        </Form.Item>
-      ) : (
-        children
-      )}
-    </td>
-  )
-}
-
-interface SkuTableFormProps {
-  currentListSpec: SkuColumns[]
-  updataTime: Date
-}
-interface SubSkuSpec {
-  indexNum: number
-  specColleId: number
-  specId: number
-  value: string
-  type: number
-  name: string
-}
-//输出sku表格UI
-const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec, updataTime }) => {
-  let skuColumns: SkuColumns[] = [] //sku表格列--渲染数据
-  let skuDataSource: SkuDataSource[] = [] //sku表格数据--渲染数据
-  const [form] = Form.useForm()
-  const [data, setData] = useState(skuDataSource)
-  const [editingKey, setEditingKey] = useState('')
-  const [isDataChanged, setIsDataChanged] = useState(false)
-  const isEditing = (record: SkuDataSource) => record.key === editingKey
-
-  const edit = (record: Partial<SkuDataSource> & { key: React.Key }) => {
-    form.setFieldsValue({ price: 0, stock: 0, alertStock: 0, ...record })
-    setEditingKey(record.key)
-    setIsDataChanged(false)
-  }
-
-  const cancel = () => {
-    setEditingKey('')
-  }
-
-  const save = async (key: React.Key) => {
-    try {
-      const row = (await form.validateFields()) as SkuDataSource
-
-      const newData = [...data]
-      const index = newData.findIndex((item) => key === item.key)
-      if (index > -1) {
-        const item = newData[index]
-        newData.splice(index, 1, {
-          ...item,
-          ...row
-        })
-        setData(newData)
-        setEditingKey('')
-      } else {
-        newData.push(row)
-        setData(newData)
-        setEditingKey('')
-      }
-    } catch (errInfo) {
-      setIsDataChanged(false)
-      console.log('Validate Failed:', errInfo)
-    }
-  }
-  //生成table的columns数据
-  const getSkuColumns = (listSpec: SkuColumns[]) => {
-    let arr: any = []
-    listSpec.map((item: SkuColumns, index) => {
-      arr.push({
-        title: item.name,
-        dataIndex: 'value_' + item.id,
-        key: 'value_' + item.id,
-        fixed: 'left',
-        width: 100
-      })
-    })
-    const subArr = [
-      {
-        title: '价格',
-        dataIndex: 'price',
-        key: 'price',
-        editable: true,
-        width: 100
-      },
-      {
-        title: '库存',
-        dataIndex: 'stock',
-        key: 'stock',
-        editable: true,
-        width: 100
-      },
-      {
-        title: '库存预警',
-        dataIndex: 'alertStock',
-        key: 'alertStock',
-        editable: true
-      },
-      {
-        title: '头图',
-        dataIndex: 'firstImg',
-        key: 'firstImg',
-        inputType: 'upload',
-        render: (fields: any) => {
-          return (
-            <>
-              {/* {fields.map((item: any) => {
-                return <img key={item.url} src={item.url} alt="" width="100px" />
-              })} */}
-              <Uploader fieldData={fields} />
-            </>
-          )
-        }
-      },
-      {
-        title: '图片集',
-        dataIndex: 'imgs',
-        key: 'imgs',
-        inputType: 'upload',
-        render: (fields: any) => {
-          return (
-            <>
-              {/* {fields.map((item: any) => {
-                return <img key={item.url} src={item.url} alt="" width="100px" />
-              })} */}
-              <Uploader fieldData={fields} />
-            </>
-          )
-        }
-      },
-      {
-        title: '操作',
-        key: 'action',
-        render: (_: any, record: SkuDataSource) => {
-          const editable = isEditing(record)
-          return editable ? (
-            <span>
-              <Button type="primary" onClick={() => save(record.key)} style={{ marginRight: 8 }}>
-                确定
-              </Button>
-              <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-                <Button>取消</Button>
-              </Popconfirm>
-            </span>
-          ) : (
-            <Typography.Link disabled={editingKey !== ''} onClick={() => edit(record)}>
-              编辑
-            </Typography.Link>
-          )
-        }
-      }
-    ]
-    arr = arr.concat(subArr)
-    // console.log(arr)
-    return arr
-  }
-  //将规格组合并转成table数据
-  const getSkuDataSource = (listSpec: SkuColumns[], data: SkuDataSource[]) => {
-    //将多个数组实现排列组合
-    const tailFn = () => {
-      let arrs: [][] = []
-      let specNameArr: string[] = []
-      for (let i = 0; i < listSpec.length; i++) {
-        arrs.push(listSpec[i].value)
-        specNameArr.push(listSpec[i].name)
-      }
-      var sarr = [[]]
-      for (var i = 0; i < arrs.length; i++) {
-        var tarr = []
-        for (var j = 0; j < sarr.length; j++) {
-          for (let k: number = 0; k < arrs[i].length; k++) {
-            Object.assign(arrs[i][k], { indexNum: k, name: specNameArr[i] })
-            tarr.push(sarr[j].concat(arrs[i][k]))
-          }
-        }
-        sarr = tarr
-      }
-      return sarr
-    }
-    let totalArr = tailFn()
-    let mainArr: any = []
-    totalArr.map((item: any, index) => {
-      let subObj: any = {}
-      let subSkuSpec: object[] = []
-      // console.log('item=============')
-      // console.log(item)
-      item.map((subItem: any, index: number) => {
-        // console.log('subItem=============')
-        // console.log(subItem)
-        subObj['value_' + subItem.specId] = subItem.value
-        //生成每个sku的属性集：subSkuSpec
-        subSkuSpec.push({
-          indexNum: subItem.indexNum,
-          specColleId: subItem.specColleId,
-          specId: subItem.specId,
-          value: subItem.value,
-          type: 1, //1:商品属性 0:普通属性
-          name: subItem.name
-        })
-      })
-      subObj['subSkuSpec'] = subSkuSpec
-      let itemIndex = -1
-      //判断记录是否存在
-      if (data.length) {
-        itemIndex = data.findIndex((item) => {
-          let isExit = false
-          const specValues: SubSkuSpec[] = subObj.subSkuSpec
-          for (let i = 0; i < specValues.length; i++) {
-            if (item.subSkuSpec[i].indexNum !== specValues[i].indexNum) {
-              isExit = false
-              break
-            } else {
-              isExit = true
-            }
-          }
-          return isExit
-        })
-      }
-      let obj: object = {}
-      if (itemIndex > -1) {
-        //记录存在-->更新
-        obj = Object.assign({}, data[itemIndex], subObj)
-      } else {
-        obj = {
-          key: index.toString(),
-          price: 0,
-          stock: 0,
-          alertStock: 0,
-          imgs: [
-            {
-              uid: '-1',
-              name: 'image.png',
-              status: 'done',
-              url: 'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png'
-            }
-          ],
-          firstImg: [
-            {
-              uid: '-2',
-              name: 'image.png',
-              status: 'done',
-              url: 'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png'
-            }
-          ]
-        }
-        Object.assign(obj, subObj)
-      }
-      mainArr.push(obj)
-    })
-    // console.log(mainArr)
-    return mainArr
-  }
-  //生成当前sku表格的渲染数据（列和数据）
-  const setSkuTableData = (listSpec: SkuColumns[]) => {
-    skuColumns = getSkuColumns(listSpec)
-    skuDataSource = getSkuDataSource(listSpec, data)
-  }
-  setSkuTableData(currentListSpec)
-  useEffect(() => {
-    setData(skuDataSource)
-  }, [updataTime])
-  console.log('data=========1111')
-  console.log(data)
-  skuTableData = data
-  const mergedColumns = skuColumns.map((col) => {
-    if (!col.editable) {
-      return col
-    }
-    return {
-      ...col,
-      onCell: (record: SkuDataSource) => ({
-        record,
-        inputType: col.inputType === 'upload' ? 'upload' : 'number',
-        dataIndex: col.dataIndex,
-        title: col.title,
-        editing: isEditing(record)
-      })
-    }
-  })
-  // console.log('updata=================')
-  return (
-    <Form name="skuTableForm" form={form} component={false}>
-      <Table
-        components={{
-          body: {
-            cell: EditableCell
-          }
-        }}
-        bordered
-        dataSource={data}
-        columns={mergedColumns}
-        rowClassName="editable-row"
-        pagination={{
-          onChange: cancel
-        }}
-        scroll={{ x: 1500, y: 600 }}
-      />
-    </Form>
-  )
-}
-//sku相关--end
 //基础form表单
-const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
+const GoodForm = ({ actionType }: any, ref: any) => {
+  // console.log('listSpec=======', listSpec)
   // 设置编辑器初始内容
   const [editorState, setEditorState] = useState(BraftEditor.createEditorState('<p></p>'))
-  const [sort, setSort] = useState('美妆>护肤品>官方直售')
+  const [sort, setSort] = useState('') //美妆>护肤品>官方直售
   const [expressTemplate, setExpressTemplate] = useState('运费模版')
   // const [imageUrl, setImageUrl] = useState('')
   // const [mainFile, setMainFile] = useState([]) //已上传的主图片
@@ -484,8 +117,11 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
   //   previewTitle: ''
   // }) //图片预览
   const [specKey, setSpecKey] = useState(NaN) //当前操作的规格数组下标
-  const [currentListSpec, setCurrentListSpec] = useState(listSpec) //当前商品规格集
+  const [listSpec, setListSpec] = useState([] as ListSpec[]) //当前商品规格集
+  // const [currentListSpec, setCurrentListSpec] = useState([]) //当前商品规格集
   const [updataTime, setUpdataTime] = useState(new Date()) //当规格值变化时，控制sku表格更新
+  // 获取结果
+  const good = useSelector<AppState, GoodState>((state) => state.good)
   const [form] = Form.useForm()
   //表单提交方法
   const onFinish = (values: any) => {
@@ -569,14 +205,16 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
   }
   //返回商品规格UI
   const listSpecFormList = () => {
-    // console.log('==========243')
-    // console.log(listSpec)
     return (
       <Form.List name={'listSpec'}>
         {(fields) => (
           <>
             {fields.map((field) => (
-              <Space key={field.key} style={{ width: '100%', marginRight: 30 }} align="baseline">
+              <Space
+                key={field.key}
+                style={{ width: '100%', display: 'block', marginRight: 30 }}
+                align="baseline"
+              >
                 <Form.Item label={listSpec[field.key].name}>
                   <Form.List name={[field.name, 'value']}>
                     {(subFields, { add, remove }) => (
@@ -611,47 +249,165 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
       </Form.List>
     )
   }
+  //form表单提交方法
+  const onFormFinish = (name: string, { values, forms }: any) => {
+    console.log('forms====', forms)
+    if (name === 'skuForm') {
+      const { basicForm, skuForm } = forms
+      let listSpec = basicForm.getFieldValue('listSpec') || []
+      const sku = skuForm.getFieldValue('skuValue') || ''
+      // console.log(sku)
+      // console.log('specKey=====')
+      // console.log(specKey)
+      const currentSpecValue = listSpec[specKey].value
+      // console.log('currentSpecValue=======')
+      // console.log(currentSpecValue)
+      currentSpecValue.push(Object.assign({}, currentSpecValue[0], { id: '', value: sku }))
+      basicForm.setFieldsValue({ listSpec })
+      // console.log(basicForm.getFieldValue('listSpec'))
+      listSpec = basicForm.getFieldValue('listSpec') || []
+      // console.log('listSpec===form====', listSpec)
+      const newListSpec = [...listSpec]
+      setListSpec(newListSpec)
+      setSkuFormVisible(false)
+      // setUpdataTime(new Date())
+    }
+    if (name === 'basicForm') {
+      console.log('values=======', values)
+      //
+    }
+  }
+  //根据分类获取规格
+  const initData = async () => {
+    // console.log(good.category)
+    //假数据
+    const newData = [
+      {
+        creater: '',
+        id: 2,
+        name: '颜色',
+        sort: 0,
+        specColleId: 1,
+        type: 1,
+        updator: '',
+        value: [
+          {
+            id: 201,
+            specColleId: 1,
+            specId: 2,
+            value: '黑色'
+          },
+          {
+            id: 202,
+            specColleId: 1,
+            specId: 2,
+            value: '红色'
+          }
+        ]
+      },
+      {
+        creater: '',
+        id: 3,
+        name: '尺码',
+        sort: 0,
+        specColleId: 1,
+        type: 1,
+        updator: '',
+        value: [
+          {
+            id: 301,
+            specColleId: 1,
+            specId: 3,
+            value: 'S'
+          },
+          {
+            id: 302,
+            specColleId: 1,
+            specId: 3,
+            value: 'M'
+          },
+          {
+            id: 303,
+            specColleId: 1,
+            specId: 3,
+            value: 'L'
+          }
+        ]
+      },
+      {
+        creater: '',
+        id: 4,
+        name: '内存',
+        sort: 0,
+        specColleId: 1,
+        type: 1,
+        updator: '',
+        value: [
+          {
+            id: 400,
+            specColleId: 1,
+            specId: 4,
+            value: '126G'
+          },
+          {
+            id: 401,
+            specColleId: 1,
+            specId: 4,
+            value: '256G'
+          },
+          {
+            id: 402,
+            specColleId: 1,
+            specId: 4,
+            value: '516G'
+          }
+        ]
+      }
+    ]
+    setSort(good.category.value.join('>'))
+    // const result: any = await listSpecByCategoryId({
+    //   categoryId: good.category.id
+    // })
+    // if (result.code === '000000') {
+    //   const newData = result.data.filter((item: any) => {
+    //     return item.type === 0
+    //   })
+    //   console.log('newData====', newData)
+    //   setListSpec(newData)
+    // }
+    //启用假数据
+    setListSpec(newData)
+  }
+  useEffect(() => {
+    initData()
+  }, [])
+  useEffect(() => {
+    // console.log('更新=======')
+    form.setFieldsValue({ listSpec })
+  }, [listSpec.length])
+  // useDeepCompareEffect(() => {
+  //   // console.log('更新==object=======')
+  //   // form.setFieldsValue({ listSpec })
+  // }, [listSpec])
+  console.log('ListSpec==111==', listSpec)
   return (
     <Form.Provider
-      onFormFinish={(name, { values, forms }) => {
-        if (name === 'skuForm') {
-          const { basicForm, skuForm } = forms
-          let listSpec = basicForm.getFieldValue('listSpec') || []
-          const sku = skuForm.getFieldValue('skuValue') || ''
-          // console.log(sku)
-          // console.log('specKey=====')
-          // console.log(specKey)
-          const currentSpecValue = listSpec[specKey].value
-          // console.log('currentSpecValue=======')
-          // console.log(currentSpecValue)
-          currentSpecValue.push(Object.assign({}, currentSpecValue[0], { id: '', value: sku }))
-          basicForm.setFieldsValue({ listSpec })
-          console.log('414=============')
-          // console.log(basicForm.getFieldValue('listSpec'))
-          listSpec = basicForm.getFieldValue('listSpec') || []
-          setCurrentListSpec(listSpec)
-          setSkuFormVisible(false)
-          setUpdataTime(new Date())
-        }
-        if (name === 'basicForm') {
-          console.log('skuTableData=======')
-          console.log(skuTableData)
-          // console.log(values)
-        }
-      }}
+      onFormFinish={onFormFinish}
       onFormChange={(formName, { changedFields, forms }) => {
         if (formName === 'basicForm') {
-          console.log('changedFields========427')
-          console.log(changedFields)
+          console.log('changedFields========427', changedFields)
           if (!changedFields.length) {
             return
           }
-          const { basicForm } = forms
-          const listSpec = basicForm.getFieldValue('listSpec') || []
-          // console.log('skuDataSource========429')
-          // console.log(listSpec)
-          setCurrentListSpec(listSpec)
-          setUpdataTime(new Date())
+          const field: any = changedFields[0]
+          if (field.name[0] === 'listSpec') {
+            const { basicForm } = forms
+            const listSpec = basicForm.getFieldValue('listSpec') || []
+            // console.log('skuDataSource========429')
+            // console.log('listSpec=======form ======', listSpec)
+            const newListSpec = [...listSpec]
+            setListSpec(newListSpec)
+          }
         }
       }}
     >
@@ -668,11 +424,78 @@ const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
         <div className={styles.basic}>
           <h2>商品基本信息</h2>
           <div className={styles.content}>
-            <Form.Item style={{ width: '100%' }}>{listSpecFormList()}</Form.Item>
+            <Form.Item label="商品分类">{sort}</Form.Item>
+            <Form.Item
+              name="goodName"
+              label="商品名称"
+              rules={[{ required: true }]}
+              extra="商品标题名称长度至少3个字符，最长50个字符"
+            >
+              <Input maxLength={50} allowClear />
+            </Form.Item>
+            <Form.Item name="brandId" label="品牌">
+              <Select onChange={onBrandChange}>
+                <Option value="1">欧莱雅</Option>
+                <Option value="2">雅诗兰黛</Option>
+                <Option value="3">兰蔻</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item name="code" label="商家货号" rules={[{ required: true }]}>
+              <Input allowClear />
+            </Form.Item>
+            <Form.Item name="minPrice" label="最低价格">
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="goodPrice"
+              label="商品价格"
+              rules={[{ required: true }]}
+              extra="价格必须是0.01~9999999之间的数字，且不能高于市场价。 <br />
+                    此价格为商品实际销售价格，如果商品存在规格，该价格显示最低价格。"
+            >
+              <Input style={{ width: '20%' }} suffix="¥" />
+            </Form.Item>
+            <Form.Item
+              label="商品图片"
+              rules={[{ required: true }]}
+              extra="上传商品默认主图，如多规格值时将默认使用该图或分规格上传各规格主图；支持jpg、gif、png格式上传或从图片空间中选择，建议使用尺寸800x800像素以上、大小不超过1M的正方形图片"
+            >
+              <Uploader fieldData={[]} />
+            </Form.Item>
+            {listSpecFormList()}
             <Form.Item label="库存配置">
-              {/* <Table columns={skuColumns} dataSource={skuDataSource} /> */}
-              {/* <SkuTable columns={skuColumns} dataSource={skuDataSource} /> */}
-              <SkuTable currentListSpec={currentListSpec} updataTime={updataTime} />
+              <SkuTable currentListSpec={listSpec} />
+            </Form.Item>
+          </div>
+        </div>
+        <div className="basic">
+          <h2>商品详情</h2>
+          <div className="content">
+            <Form.Item label="商品描述" rules={[{ required: true }]}>
+              <Uploader fieldData={[]} />
+            </Form.Item>
+          </div>
+        </div>
+        <div className="basic">
+          <h2>商品物流信息</h2>
+          <div className="content">
+            <Form.Item label="运费">
+              <span>{expressTemplate}</span>
+              <Button>确定</Button>
+            </Form.Item>
+          </div>
+        </div>
+        <div className="basic">
+          <h2>页面SEO</h2>
+          <div className="">
+            <Form.Item name="title" label="SEO标题" rules={[{ required: true }]}>
+              <Input maxLength={50} allowClear />
+            </Form.Item>
+            <Form.Item name="keyword" label="SEO关键字" rules={[{ required: true }]}>
+              <Input maxLength={50} allowClear />
+            </Form.Item>
+            <Form.Item name="description" label="SEO描述" rules={[{ required: true }]}>
+              <Input maxLength={50} allowClear />
             </Form.Item>
           </div>
         </div>

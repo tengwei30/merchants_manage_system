@@ -1,9 +1,18 @@
 import { get, post, fileUpload } from '../utils/axios'
-
+/**
+ * 用途：查询商品所有分类
+ * 参数：无
+ * YApi: http://yapi.yufu.cn:18094/project/9/interface/api/1325
+ */
+export const getAllCategory = () => {
+  return get({
+    url: '/merchant/category/all'
+  })
+}
 /**
  * 用途：根据分类id查询规格
  * 参数：categoryId	否
- * YApi: http://yapi.yufu.cn:18094/project/9/interface/api/1332
+ * YApi: http://yapi.yufu.cn:18094/project/9/interface/api/1682
  */
 export const listSpecByCategoryId = (params: {}) => {
   return get({
@@ -12,13 +21,35 @@ export const listSpecByCategoryId = (params: {}) => {
   })
 }
 /**
- * 用途：查询商品所有分类
- * 参数：无
- * YApi: http://yapi.yufu.cn:18094/project/9/interface/api/1325
+ * 用途：发布商品接口
+ * YApi: http://yapi.yufu.cn:18094/project/9/interface/api/1738
+ * 商户中心商品相关api接口
  */
-export const getAllCategory = (params: {}) => {
+export const publish = (params: {}) => {
+  return post({
+    url: '/merchant/goods/publish',
+    data: params
+  })
+}
+/**
+ * 用途：根据业务id分页查询商品spu列表
+ * YApi: http://yapi.yufu.cn:18094/project/9/interface/api/1731
+ * 商户中心商品相关api接口
+ */
+export const pageByCondition = (params: {}) => {
+  return post({
+    url: '/merchant/goods/page-by-condition',
+    data: params
+  })
+}
+/**
+ * 用途：查询商品详情接口
+ * YApi: http://yapi.yufu.cn:18094/project/9/interface/api/1710
+ * 商户中心商品相关api接口
+ */
+export const detail = (params: {}) => {
   return get({
-    url: '/merchant/category/all',
+    url: '/merchant/goods/detail',
     data: params
   })
 }

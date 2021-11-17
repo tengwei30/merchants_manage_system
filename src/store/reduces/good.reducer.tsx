@@ -3,14 +3,14 @@ import { GoodUnionType } from '../actions/good.actions'
 export interface GoodState {
   category: {
     id: number
-    value: string
+    value: string[]
   }
 }
 
 const initState = {
   category: {
     id: NaN,
-    value: ''
+    value: []
   }
 }
 

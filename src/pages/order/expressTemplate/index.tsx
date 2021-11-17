@@ -44,10 +44,12 @@ const tailLayout = {
 const EditableContext = React.createContext<FormInstance<any> | null>(null)
 
 interface Item {
-  key: string
-  name: string
-  age: string
-  address: string
+  key: number
+  regionArea: string
+  firstCount: number
+  firstPrice: number
+  nextCount: number
+  nextPrice: number
 }
 
 interface EditableRowProps {
@@ -103,6 +105,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
       const values = await form.validateFields()
 
       toggleEdit()
+      console.log('values==================', values)
       handleSave({ ...record, ...values })
     } catch (errInfo) {
       console.log('Save failed:', errInfo)
@@ -224,7 +227,6 @@ const ExpressTemplate = (props: any) => {
       key: 'regionArea',
       width: 500,
       render: (_, record: any) => {
-        // console.log('186---record========', record)
         return (
           <>
             <span>{record.regionArea}</span>
@@ -375,7 +377,7 @@ const ExpressTemplate = (props: any) => {
   const getTemplateDetail = async (id: number) => {
     const result: any = await templateDetail({ id })
     if (result.code === '000000') {
-      const itemList = result.data.merchantExpressTemplateItemList
+      const itemList: DataType[] = result.data.merchantExpressTemplateItemList
       form.setFieldsValue({
         name: result.data.name,
         deliveryCompany: result.data.deliveryCompany,
@@ -386,16 +388,8 @@ const ExpressTemplate = (props: any) => {
         nextPrice: itemList[0].nextPrice
       })
       itemList.shift()
-      // key: count,
-      // regionArea: '',
-      // firstCount: 0,
-      // firstPrice: 0,
-      // nextCount: 0,
-      // nextPrice: 0,
-      // ifDefault: 0,
-      // merchantExpressTemplateItemRegionDetailList: []
       let newServerItem: DataType[] = []
-      itemList.map((item: any, index: number) => {
+      itemList.map((item: DataType, index: number) => {
         let serverItem: DataType = {
           key: index,
           regionArea: '',
@@ -404,23 +398,27 @@ const ExpressTemplate = (props: any) => {
           nextCount: item.nextCount,
           nextPrice: item.nextPrice,
           ifDefault: 0,
-          merchantExpressTemplateItemRegionDetailList: item.merchantExpressTemplateItemRegionDetailList
+          merchantExpressTemplateItemRegionDetailList: []
         }
-        // serverItem.merchantExpressTemplateItemRegionDetailList = item.merchantExpressTemplateItemRegionDetailList
-        item.merchantExpressTemplateItemRegionDetailList((detailItem: any) => {
+        const detailList: ServerData[] = item.merchantExpressTemplateItemRegionDetailList
+        let cities: string[] = []
+        serverItem.merchantExpressTemplateItemRegionDetailList = detailList
+        detailList.map((detailItem: any) => {
           if (detailItem.subMerchantExpressTemplateItemRegionDetailList.length) {
-            serverItem.regionArea +=
-              detailItem.subMerchantExpressTemplateItemRegionDetailList.join(',')
+            detailItem.subMerchantExpressTemplateItemRegionDetailList.map(
+              (tailItem: ServerData) => {
+                cities.push(tailItem.regionName)
+              }
+            )
+          } else {
+            cities.push(detailItem.regionName)
           }
         })
+        serverItem.regionArea = cities.join(',')
         newServerItem.push(serverItem)
       })
       setCount(newServerItem.length)
-      // console.log('itemList=====', itemList)
       setDataSource(newServerItem) //同时要存储到store的order中
-      // dispatch(
-      //   setExpressRegion(itemList.merchantExpressTemplateItemRegionDetailList, itemList.regionArea)
-      // )
     }
   }
   //当编辑地区时，更新dataSource
@@ -441,7 +439,6 @@ const ExpressTemplate = (props: any) => {
     setIsVisible(order.expressRegion.isVisible)
   }, [order.expressRegion.isVisible])
   useEffect(() => {
-    // console.log('props=======', props)
     const getCompany = async () => {
       const data: any = await company()
       setCompanyData(data.data)
@@ -457,7 +454,7 @@ const ExpressTemplate = (props: any) => {
     getCompany()
   }, [])
   // console.log('initialValues====', initialValues)
-  console.log('order.expressRegion=====render====', order.expressRegion)
+  // console.log('order.expressRegion=====render====', order.expressRegion)
   // console.log('regionData===render====', regionData)
   return (
     <LayoutMenu>
@@ -465,7 +462,6 @@ const ExpressTemplate = (props: any) => {
         {...layout}
         form={form}
         name="basicForm"
-        // initialValues={initialValues}
         validateMessages={validateMessages}
         onFinish={onFinish}
       >

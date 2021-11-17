@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Button, Table, Row, Col, Form, Input, Select, ConfigProvider } from 'antd'
+import { Button, Table, Row, Col, Form, Input, Select } from 'antd'
 // import zhCN from 'antd/es/locale/zh_CN'
 // import moment from 'moment'
 // import 'moment/locale/zh-cn'
@@ -18,24 +18,15 @@ interface DataType {
   deliveryCompany: string
   [propName: string]: any
 }
-// const data: DataType[] = [
-//   {
-//     key: '1',
-//     name: 'John Brown',
-//     deliveryDuration: '24h',
-//     deliveryCompany: 'qwe'
-//   },
-//   {
-//     key: '2',
-//     name: 'John Brown2',
-//     deliveryDuration: '24h',
-//     deliveryCompany: 'qwe'
-//   }
-// ]
-
+interface PageInfo {
+  currentPage: number
+  totalNum: number
+  totalPage: number
+}
 const Express = (props: any) => {
   const [dataSource, setDataSource] = React.useState([] as DataType[])
   const [companyData, setCompanyData] = React.useState([])
+  const [pageInfo, setPageInfo] = React.useState({ currentPage: 1 } as PageInfo)
   const [form] = Form.useForm()
   const columns = [
     {
@@ -73,9 +64,13 @@ const Express = (props: any) => {
       }
     }
   ]
+  let searchParams = {}
+  const onPaginationChange = (page: any, pageSize?: number) => {
+    console.log(page, pageSize)
+    setPageInfo({ ...pageInfo, currentPage: page })
+  }
   //添加模版
   const goTemplate = () => {
-    console.log('props======', props)
     props.history.push('/order/expressTemplate')
   }
   //修改模版
@@ -85,15 +80,26 @@ const Express = (props: any) => {
     props.history.push('/order/expressTemplate/' + data.id)
   }
   const onFinish = async (values: any) => {
-    console.log('values====', values)
+    // console.log('values====', values)
+    searchParams = values
     getTableData(values)
   }
   const getTableData = async (props: object = {}) => {
-    const result: any = await templateList({ ...props })
+    const result: any = await templateList({
+      ...props,
+      count: true,
+      limit: 10,
+      currentPage: pageInfo.currentPage
+    })
     // console.log('result====', result)
     if (!result.data.items.length) {
       return
     }
+    setPageInfo({
+      currentPage: result.data.currentPage,
+      totalNum: result.data.totalNum,
+      totalPage: result.data.totalPage
+    })
     const data: DataType[] = result.data.items
     data.map((item) => {
       item.key = item.id.toString()
@@ -108,6 +114,10 @@ const Express = (props: any) => {
     getCompany()
     getTableData()
   }, [])
+  React.useEffect(() => {
+    console.log(pageInfo.currentPage)
+    getTableData(searchParams)
+  }, [pageInfo.currentPage])
   return (
     <>
       <LayoutMenu>
@@ -160,7 +170,18 @@ const Express = (props: any) => {
             </Button>
             {/* <Redirect to="/order/expressTemplate" /> */}
           </div>
-          <Table columns={columns} dataSource={dataSource} bordered />
+          <Table
+            columns={columns}
+            dataSource={dataSource}
+            bordered
+            pagination={{
+              onChange: onPaginationChange,
+              current: pageInfo.currentPage,
+              total: pageInfo.totalNum,
+              defaultPageSize: 10,
+              showTotal: (total) => `共 ${total} 条`
+            }}
+          />
         </div>
       </LayoutMenu>
     </>
