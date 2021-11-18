@@ -1,17 +1,16 @@
 import { UserOutlined, LaptopOutlined, TagsOutlined, ToolOutlined } from '@ant-design/icons'
 import Home from '../pages/home/index'
-import Publish from '../pages/good/publish/index'
-import Sale from '../pages/good/sale/index'
-import WareHouse from '../pages/good/warehouse/index'
+import Sale from '../pages/goods/sale/index'
+import WareHouse from '../pages/goods/warehouse/index'
 import Brand from '../pages/shops/brand/index'
-import Illegal from '../pages/good/illegal'
+import Illegal from '../pages/goods/illegal'
 import Order from '../pages/order/list/index'
 import Delivery from '../pages/order/delivery/index'
 import DeliverySet from '../pages/order/deliverySet/index'
 import Comment from '../pages/order/comment/index'
 import Refund from '../pages/afterSales/refund/index'
 import Exchange from '../pages/afterSales/exchange/index'
-import AddGood from '../pages/good/add-good'
+import Publish from '../pages/goods/publish'
 import Express from '../pages/order/express/index'
 import ExpressTemplate from '../pages/order/expressTemplate/index'
 
@@ -36,32 +35,27 @@ export const slideBarConfig: SlideItem[] = [
   {
     name: '商品管理',
     icon: <UserOutlined />,
-    url: '/good',
+    url: '/goods',
     children: [
       {
-        name: '我要卖',
-        url: '/good/publish',
+        name: '商品发布',
+        url: '/goods/publish',
         component: Publish
       },
       {
         name: '出售中的商品',
-        url: '/good/sale',
+        url: '/goods/sale',
         component: Sale
       },
       {
         name: '违规商品列表',
-        url: '/good/illegal',
+        url: '/goods/illegal',
         component: Illegal
       },
       {
         name: '仓库中的商品',
-        url: '/good/warehouse',
+        url: '/goods/warehouse',
         component: WareHouse
-      },
-      {
-        name: '商品发布',
-        url: '/good/add-good',
-        component: AddGood
       }
     ]
   },

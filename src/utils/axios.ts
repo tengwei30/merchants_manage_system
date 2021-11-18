@@ -40,7 +40,13 @@ axios.interceptors.request.use(
     let token: string | null = window.localStorage.getItem('token')
     Object.assign(configTemp.headers, {
       sessionId: token ? JSON.parse(token).sessionId : '',
-      'X-Client': '{}'
+      'X-Client': {
+        platformId: '1.0.0',
+        channelId: '1.0.0',
+        mainVersion: '1.0.0',
+        subVersion: '1.0.0',
+        fixVersion: '1.0.0'
+      }
     })
     configTemp.headers.common.eventTime = Date.now()
     // Do something before request is sent

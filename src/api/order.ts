@@ -48,7 +48,7 @@ export const templateDetail = (params: {}) => {
  * YApi: http://yapi.yufu.cn:18094/project/9/interface/api/2179
  * tag: 商户运费模版相关api接口
  */
-export const templateList = (params: {}) => {
+export const templateList = (params?: {}) => {
   return post({
     url: '/merchant/express/template/page',
     data: params

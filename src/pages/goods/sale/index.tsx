@@ -1,7 +1,7 @@
 import { Divider } from 'antd'
 import LayoutMenu from '../../../components/DashBoard'
-import SearchForm from '../sale/components/Form'
-import List from '../sale/components/List'
+import SearchForm from './components/Form'
+import List from './components/List'
 
 const Sale = () => {
   return (

@@ -53,3 +53,23 @@ export const detail = (params: {}) => {
     data: params
   })
 }
+/**
+ * 用途：商品品牌列表接口
+ * YApi: http://yapi.yufu.cn:18094/project/9/interface/api/1465
+ * 商品品牌相关api接口
+ */
+export const brandList = () => {
+  return post({
+    url: '/goods/brand/list'
+  })
+}
+/**
+ * 用途：商品支付方式列表
+ * YApi: http://yapi.yufu.cn:18094/project/9/interface/api/1465
+ * 商品spu相关api接口
+ */
+export const payTypes = () => {
+  return get({
+    url: '/goods/spu/list-pay-types'
+  })
+}

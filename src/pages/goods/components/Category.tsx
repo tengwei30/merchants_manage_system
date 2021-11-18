@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { Form, Row, Col, Input, Button, Cascader } from 'antd'
 import { CascaderValueType, CascaderOptionType } from 'antd/lib/cascader'
 import { useDispatch, useSelector, useStore } from 'react-redux'
-import { setCategory } from '../../../store/actions/good.actions'
-import { getAllCategory } from '../../../api/good'
+import { setCategory } from '../../../store/actions/goods.actions'
+import { getAllCategory } from '../../../api/goods'
 
 const Category = () => {
   const [categoryId, setCategoryId] = useState(NaN)

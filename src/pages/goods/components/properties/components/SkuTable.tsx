@@ -24,23 +24,17 @@ import {
   UserOutlined
 } from '@ant-design/icons'
 import { FormInstance } from 'antd/lib/form'
-import BraftEditor from 'braft-editor'
 import 'braft-editor/dist/index.css'
-import styles from '../components/Form.module.css'
-import Uploader from '../../../components/properties/components/Uploader'
+// import styles from '../components/Form.module.css'
+import Uploader from './Uploader'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppState } from '../../../../../store/reduces'
-import { GoodState } from '../../../../../store/reduces/good.reducer'
-import { listSpecByCategoryId, publish, pageByCondition } from '../../../../../api/good'
+import { GoodsState } from '../../../../../store/reduces/goods.reducer'
+import { SkuList } from '../../../../../store/models/goods'
+import { setSkuList } from '../../../../../store/actions/goods.actions'
+// import { listSpecByCategoryId, publish, pageByCondition } from '../../../../../api/goods'
 import useDeepCompareEffect from 'use-deep-compare-effect'
-// creater: '',
-// id: 3,
-// name: '尺码',
-// sort: 0,
-// specColleId: 1,
-// type: 1,
-// updator: '',
-// value:
+
 interface SubParentData {
   id: number
   specColleId: number
@@ -70,9 +64,11 @@ interface SkuColumns {
 //定义sku表格数据项接口
 interface SkuDataSource {
   key: string
-  price: number
+  costPrice: number
   stock: number
   alertStock: number
+  marketPrice: number
+  salePrice: number
   [propName: string]: any
 }
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
@@ -131,20 +127,31 @@ interface SubSkuSpec {
 }
 //输出sku表格UI
 const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec }) => {
-  // let skuColumns: SkuColumns[] = [] //sku表格列--渲染数据
-  // let skuDataSource: SkuDataSource[] = [] //sku表格数据--渲染数据
   const [form] = Form.useForm()
-  const [data, setData] = useState([] as SkuDataSource[])
-  const [skuColumns, setSkuColumns] = useState([] as SkuColumns[])
-  const [skuDataSource, setSkuDataSource] = useState([] as SkuDataSource[])
+  // const [data, setData] = useState([] as SkuDataSource[])
+  const [skuColumns, setSkuColumns] = useState([] as SkuColumns[]) //sku表格列--渲染数据
+  const [skuDataSource, setSkuDataSource] = useState([] as SkuDataSource[]) //sku表格数据--渲染数据
   const [editingKey, setEditingKey] = useState('')
-  const [isDataChanged, setIsDataChanged] = useState(false)
+  // const [isDataChanged, setIsDataChanged] = useState(false)
+  //获取dispatch
+  const dispatch = useDispatch()
   const isEditing = (record: SkuDataSource) => record.key === editingKey
 
   const edit = (record: Partial<SkuDataSource> & { key: React.Key }) => {
-    form.setFieldsValue({ price: 0, stock: 0, alertStock: 0, ...record })
+    form.setFieldsValue({
+      costPrice: 0,
+      stock: 0,
+      alertStock: 0,
+      marketPrice: 0,
+      salePrice: 0,
+      width: 0,
+      height: 0,
+      length: 0,
+      weight: 0,
+      ...record
+    })
     setEditingKey(record.key)
-    setIsDataChanged(false)
+    // setIsDataChanged(false)
   }
 
   const cancel = () => {
@@ -155,7 +162,7 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec }) => {
     try {
       const row = (await form.validateFields()) as SkuDataSource
 
-      const newData = [...data]
+      const newData = [...skuDataSource]
       const index = newData.findIndex((item) => key === item.key)
       if (index > -1) {
         const item = newData[index]
@@ -163,15 +170,15 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec }) => {
           ...item,
           ...row
         })
-        setData(newData)
+        setSkuDataSource(newData)
         setEditingKey('')
       } else {
         newData.push(row)
-        setData(newData)
+        setSkuDataSource(newData)
         setEditingKey('')
       }
     } catch (errInfo) {
-      setIsDataChanged(false)
+      // setIsDataChanged(false)
       console.log('Validate Failed:', errInfo)
     }
   }
@@ -184,14 +191,28 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec }) => {
         dataIndex: 'value_' + item.id,
         key: 'value_' + item.id,
         fixed: 'left',
-        width: 100
+        width: 80
       })
     })
     const subArr = [
       {
-        title: '价格',
-        dataIndex: 'price',
-        key: 'price',
+        title: '销售价格',
+        dataIndex: 'salePrice',
+        key: 'salePrice',
+        editable: true,
+        width: 100
+      },
+      {
+        title: '市场价格',
+        dataIndex: 'marketPrice',
+        key: 'marketPrice',
+        editable: true,
+        width: 100
+      },
+      {
+        title: '成本价格',
+        dataIndex: 'costPrice',
+        key: 'costPrice',
         editable: true,
         width: 100
       },
@@ -199,13 +220,36 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec }) => {
         title: '库存',
         dataIndex: 'stock',
         key: 'stock',
-        editable: true,
-        width: 100
+        editable: true
       },
       {
         title: '库存预警',
         dataIndex: 'alertStock',
         key: 'alertStock',
+        editable: true
+      },
+      {
+        title: '宽度(M)',
+        dataIndex: 'width',
+        key: 'width',
+        editable: true
+      },
+      {
+        title: '高度(M)',
+        dataIndex: 'height',
+        key: 'height',
+        editable: true
+      },
+      {
+        title: '长度(M)',
+        dataIndex: 'length',
+        key: 'length',
+        editable: true
+      },
+      {
+        title: '重量(KG)',
+        dataIndex: 'weight',
+        key: 'weight',
         editable: true
       },
       {
@@ -268,13 +312,11 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec }) => {
   }
   //将规格组合并转成table数据
   const getSkuDataSource = (listSpec: ParentData[], data: SkuDataSource[]) => {
-    console.log('data=======', data)
     //将多个数组实现排列组合
     const tailFn = () => {
       let arrs: any = []
       let specNameArr: string[] = []
       for (let i = 0; i < listSpec.length; i++) {
-        console.log('listSpec[i]====', listSpec[i])
         arrs.push(listSpec[i].value)
         specNameArr.push(listSpec[i].name)
       }
@@ -296,8 +338,7 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec }) => {
     totalArr.map((item: any, index) => {
       let subObj: any = {}
       let subSkuSpec: object[] = []
-      console.log('item=============', item)
-      // console.log(item)
+      // console.log('item=============', item)
       item.map((subItem: any, index: number) => {
         // console.log('subItem=============')
         // console.log(subItem)
@@ -322,8 +363,8 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec }) => {
             return false
           }
           const specValues: SubSkuSpec[] = subObj.subSkuSpec
-          console.log('dataItem====', dataItem)
-          console.log('specValues======', specValues)
+          // console.log('dataItem====', dataItem)
+          // console.log('specValues======', specValues)
           for (let i = 0; i < specValues.length; i++) {
             if (dataItem.subSkuSpec[i].indexNum !== specValues[i].indexNum) {
               isExit = false
@@ -342,9 +383,15 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec }) => {
       } else {
         obj = {
           key: index.toString(),
-          price: 0,
+          costPrice: 0,
           stock: 0,
           alertStock: 0,
+          marketPrice: 0,
+          salePrice: 0,
+          width: 0,
+          height: 0,
+          length: 0,
+          weight: 0,
           imgs: [
             {
               uid: '-1',
@@ -369,26 +416,53 @@ const SkuTable: React.FC<SkuTableFormProps> = ({ currentListSpec }) => {
     // console.log(mainArr)
     return mainArr
   }
+  const setServerData = () => {
+    let merchantGoodsSkuReqList: SkuList[] = []
+    skuDataSource.map((item: any) => {
+      let data: SkuList = {
+        costPrice: item.costPrice,
+        stock: item.stock,
+        alertStock: item.alertStock,
+        marketPrice: item.marketPrice,
+        salePrice: item.salePrice,
+        width: item.width,
+        height: item.height,
+        length: item.length,
+        weight: item.weight,
+        merchantGoodsSkuSpecValueReqList: item.subSkuSpec,
+        merchantGoodsImgsReqList: []
+      }
+      item.firstImg.map((imgItem: any) => {
+        data.merchantGoodsImgsReqList.push({
+          ifViedo: 1,
+          url: imgItem.url
+        })
+      })
+      item.imgs.map((imgItem: any) => {
+        data.merchantGoodsImgsReqList.push({
+          ifViedo: 0,
+          url: imgItem.url
+        })
+      })
+      merchantGoodsSkuReqList.push(data)
+    })
+    console.log('merchantGoodsSkuReqList=====', merchantGoodsSkuReqList)
+    //存储数据
+    dispatch(setSkuList(merchantGoodsSkuReqList))
+  }
   //生成当前sku表格的渲染数据（列和数据）
-  // const setSkuTableData = (listSpec: ParentData[]) => {
-  //   skuColumns = getSkuColumns(listSpec)
-  //   skuDataSource = getSkuDataSource(listSpec, data)
-  // }
-  // useEffect(() => {
-  //   // setSkuTableData(currentListSpec)
-  //   // console.log('currentListSpec=======', currentListSpec)
-  //   // console.log('=========', getSkuDataSource(currentListSpec, skuDataSource))
-  //   setSkuColumns(getSkuColumns(currentListSpec))
-  //   setSkuDataSource(getSkuDataSource(currentListSpec, skuDataSource))
-  // }, [currentListSpec.length])
   useDeepCompareEffect(() => {
-    console.log('currentListSpec===111111111====', currentListSpec)
+    // console.log('currentListSpec===111111111====', currentListSpec)
     setSkuColumns(getSkuColumns(currentListSpec))
     setSkuDataSource(getSkuDataSource(currentListSpec, skuDataSource))
   }, [currentListSpec])
-  console.log('currentListSpec=========', currentListSpec)
-  // console.log(data)
-  // skuTableData = data
+  useDeepCompareEffect(() => {
+    console.log('skuDataSource=======', skuDataSource)
+    //处理数据
+    setServerData()
+  }, [skuDataSource])
+
+  // console.log('skuDataSource=========', skuDataSource)
   const mergedColumns = skuColumns.map((col) => {
     if (!col.editable) {
       return col
