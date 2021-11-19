@@ -46,17 +46,18 @@ export const slideBarConfig: SlideItem[] = [
         name: '出售中的商品',
         url: '/goods/sale',
         component: Sale
-      },
-      {
-        name: '违规商品列表',
-        url: '/goods/illegal',
-        component: Illegal
-      },
-      {
-        name: '仓库中的商品',
-        url: '/goods/warehouse',
-        component: WareHouse
       }
+      // ,
+      // {
+      //   name: '违规商品列表',
+      //   url: '/goods/illegal',
+      //   component: Illegal
+      // },
+      // {
+      //   name: '仓库中的商品',
+      //   url: '/goods/warehouse',
+      //   component: WareHouse
+      // }
     ]
   },
   {
@@ -65,7 +66,7 @@ export const slideBarConfig: SlideItem[] = [
     icon: <LaptopOutlined />,
     children: [
       {
-        name: '品牌授权',
+        name: '店铺信息',
         url: '/shops/brand',
         component: Brand
       }
@@ -91,39 +92,41 @@ export const slideBarConfig: SlideItem[] = [
         url: '/order/deliverySet',
         component: DeliverySet
       },
-      {
-        name: '评价管理',
-        url: '/order/comment',
-        component: Comment
-      },
+      // {
+      //   name: '评价管理',
+      //   url: '/order/comment',
+      //   component: Comment
+      // },
       {
         name: '运费模版',
         url: '/order/express',
         component: Express
-      },
-      {
-        name: '添加运费模版',
-        url: '/order/expressTemplate/:id?',
-        noSideItem: true,
-        component: ExpressTemplate
       }
-    ]
-  },
-  {
-    name: '售后服务',
-    url: '/afterSales',
-    icon: <ToolOutlined />,
-    children: [
-      {
-        name: '退款记录',
-        url: '/afterSales/refund',
-        component: Refund
-      },
-      {
-        name: '退货记录',
-        url: '/afterSales/exchange',
-        component: Exchange
-      }
+      // ,
+      // {
+      //   name: '添加运费模版',
+      //   url: '/order/expressTemplate/:id?',
+      //   noSideItem: true,
+      //   component: ExpressTemplate
+      // }
     ]
   }
+  // ,
+  // {
+  //   name: '售后服务',
+  //   url: '/afterSales',
+  //   icon: <ToolOutlined />,
+  //   children: [
+  //     {
+  //       name: '退款记录',
+  //       url: '/afterSales/refund',
+  //       component: Refund
+  //     },
+  //     {
+  //       name: '退货记录',
+  //       url: '/afterSales/exchange',
+  //       component: Exchange
+  //     }
+  //   ]
+  // }
 ]
