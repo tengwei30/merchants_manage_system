@@ -407,7 +407,7 @@ const GoodsForm = ({ actionType }: any, ref: any) => {
     value: string
   }
   const onSave = async (values: any) => {
-    console.log('values=====', values)
+    // console.log('values=====', values)
     let payType: PayType[] = []
     payCheckedList.map((item) => {
       let targetData: any = {}
@@ -428,7 +428,6 @@ const GoodsForm = ({ actionType }: any, ref: any) => {
       }
       merchantGoodsSkuSpecValueReqList.push(subData)
     })
-    console.log('merchantGoodsSkuSpecValueReqList=====', merchantGoodsSkuSpecValueReqList)
     const data = {
       brandId: values.brandId,
       categoryId: goods.category.id,
@@ -458,20 +457,16 @@ const GoodsForm = ({ actionType }: any, ref: any) => {
       type: values.type,
       unit: values.unit
     }
-    console.log('data======', data)
     const result = await publish(data)
   }
   //form表单提交方法
   const onFormFinish = (name: string, { values, forms }: any) => {
-    // console.log('forms====', forms)
     if (name === 'skuForm') {
       const { basicForm, skuForm } = forms
       let listSpec = basicForm.getFieldValue('listSpec') || []
       const sku = skuForm.getFieldValue('skuValue') || ''
       const specData = listSpec[specKey]
       let currentSpecValue = listSpec[specKey].value
-      console.log('listSpec[specKey]=======', listSpec[specKey])
-      console.log('currentSpecValue=======', currentSpecValue)
       currentSpecValue.push(
         Object.assign({}, currentSpecValue[0], {
           id: '',
@@ -487,7 +482,7 @@ const GoodsForm = ({ actionType }: any, ref: any) => {
       setSkuFormVisible(false)
     }
     if (name === 'basicForm') {
-      console.log('values=======', values)
+      // console.log('values=======', values)
       onSave(values)
     }
   }
@@ -517,251 +512,129 @@ const GoodsForm = ({ actionType }: any, ref: any) => {
       categoryId: goods.category.id
     })
     if (result.code === '000000') {
-      // const newData = result.data
+      const newData = result.data
 
       //假数据
-      const newData: ListSpec[] = [
-        {
-          id: 1009,
-          specColleId: 1005,
-          name: '内存',
-          type: 1,
-          sort: 9,
-          creater: null,
-          updator: null,
-          value: [
-            {
-              id: 1009,
-              specColleId: 1005,
-              specId: 1009,
-              value: '64G'
-            },
-            {
-              id: 1010,
-              specColleId: 1005,
-              specId: 1009,
-              value: '128G'
-            },
-            {
-              id: 1011,
-              specColleId: 1005,
-              specId: 1009,
-              value: '32G'
-            }
-          ]
-        },
-        {
-          id: 1010,
-          specColleId: 1005,
-          name: '颜色',
-          type: 1,
-          sort: 9,
-          creater: null,
-          updator: null,
-          value: [
-            {
-              id: 1007,
-              specColleId: 1005,
-              specId: 1010,
-              value: '红'
-            },
-            {
-              id: 1008,
-              specColleId: 1005,
-              specId: 1010,
-              value: '蓝'
-            }
-          ]
-        },
-        {
-          id: 1011,
-          specColleId: 1005,
-          name: '重量(kg)',
-          type: 0,
-          sort: 0,
-          creater: null,
-          updator: null,
-          value: []
-        },
-        {
-          id: 1012,
-          specColleId: 1005,
-          name: '长(cm)',
-          type: 0,
-          sort: 0,
-          creater: null,
-          updator: null,
-          value: []
-        },
-        {
-          id: 1013,
-          specColleId: 1005,
-          name: '宽(cm)',
-          type: 0,
-          sort: 0,
-          creater: null,
-          updator: null,
-          value: []
-        },
-        {
-          id: 1014,
-          specColleId: 1005,
-          name: '高(cm)',
-          type: 0,
-          sort: 0,
-          creater: null,
-          updator: null,
-          value: [
-            {
-              id: 1012,
-              specColleId: 1005,
-              specId: 1014,
-              value: 'a'
-            },
-            {
-              id: 1013,
-              specColleId: 1005,
-              specId: 1014,
-              value: 'b'
-            },
-            {
-              id: 1014,
-              specColleId: 1005,
-              specId: 1014,
-              value: 'c'
-            }
-          ]
-        },
-        {
-          id: 1016,
-          specColleId: 1005,
-          name: 'test',
-          type: 1,
-          sort: 1,
-          creater: 'ADMIN:admin',
-          updator: 'ADMIN:admin',
-          value: []
-        }
-      ]
-      // const newData = [
+      // const newData: ListSpec[] = [
       //   {
-      //     creater: '',
-      //     id: 2,
-      //     name: '颜色',
-      //     sort: 0,
-      //     specColleId: 1,
-      //     type: 1,
-      //     updator: '',
-      //     value: [
-      //       {
-      //         id: 201,
-      //         specColleId: 1,
-      //         specId: 2,
-      //         value: '黑色'
-      //       },
-      //       {
-      //         id: 202,
-      //         specColleId: 1,
-      //         specId: 2,
-      //         value: '红色'
-      //       }
-      //     ]
-      //   },
-      //   {
-      //     creater: '',
-      //     id: 3,
-      //     name: '尺码',
-      //     sort: 0,
-      //     specColleId: 1,
-      //     type: 1,
-      //     updator: '',
-      //     value: [
-      //       {
-      //         id: 301,
-      //         specColleId: 1,
-      //         specId: 3,
-      //         value: 'S'
-      //       },
-      //       {
-      //         id: 302,
-      //         specColleId: 1,
-      //         specId: 3,
-      //         value: 'M'
-      //       },
-      //       {
-      //         id: 303,
-      //         specColleId: 1,
-      //         specId: 3,
-      //         value: 'L'
-      //       }
-      //     ]
-      //   },
-      //   {
-      //     creater: '',
-      //     id: 4,
+      //     id: 1009,
+      //     specColleId: 1005,
       //     name: '内存',
-      //     sort: 0,
-      //     specColleId: 1,
       //     type: 1,
-      //     updator: '',
+      //     sort: 9,
+      //     creater: null,
+      //     updator: null,
       //     value: [
       //       {
-      //         id: 400,
-      //         specColleId: 1,
-      //         specId: 4,
-      //         value: '126G'
+      //         id: 1009,
+      //         specColleId: 1005,
+      //         specId: 1009,
+      //         value: '64G'
       //       },
       //       {
-      //         id: 401,
-      //         specColleId: 1,
-      //         specId: 4,
-      //         value: '256G'
+      //         id: 1010,
+      //         specColleId: 1005,
+      //         specId: 1009,
+      //         value: '128G'
       //       },
       //       {
-      //         id: 402,
-      //         specColleId: 1,
-      //         specId: 4,
-      //         value: '516G'
+      //         id: 1011,
+      //         specColleId: 1005,
+      //         specId: 1009,
+      //         value: '32G'
       //       }
       //     ]
       //   },
       //   {
-      //     creater: '',
-      //     id: 5,
-      //     name: '材质',
-      //     sort: 0,
-      //     specColleId: 1,
-      //     type: 0,
-      //     updator: '',
+      //     id: 1010,
+      //     specColleId: 1005,
+      //     name: '颜色',
+      //     type: 1,
+      //     sort: 9,
+      //     creater: null,
+      //     updator: null,
       //     value: [
       //       {
-      //         id: 500,
-      //         specColleId: 1,
-      //         specId: 5,
-      //         value: '红木'
+      //         id: 1007,
+      //         specColleId: 1005,
+      //         specId: 1010,
+      //         value: '红'
       //       },
       //       {
-      //         id: 501,
-      //         specColleId: 1,
-      //         specId: 5,
-      //         value: '橡木'
-      //       },
-      //       {
-      //         id: 502,
-      //         specColleId: 1,
-      //         specId: 5,
-      //         value: '谭木'
+      //         id: 1008,
+      //         specColleId: 1005,
+      //         specId: 1010,
+      //         value: '蓝'
       //       }
       //     ]
       //   },
       //   {
-      //     creater: '',
-      //     id: 6,
-      //     name: '质检标准',
-      //     sort: 0,
-      //     specColleId: 1,
+      //     id: 1011,
+      //     specColleId: 1005,
+      //     name: '重量(kg)',
       //     type: 0,
-      //     updator: '',
+      //     sort: 0,
+      //     creater: null,
+      //     updator: null,
+      //     value: []
+      //   },
+      //   {
+      //     id: 1012,
+      //     specColleId: 1005,
+      //     name: '长(cm)',
+      //     type: 0,
+      //     sort: 0,
+      //     creater: null,
+      //     updator: null,
+      //     value: []
+      //   },
+      //   {
+      //     id: 1013,
+      //     specColleId: 1005,
+      //     name: '宽(cm)',
+      //     type: 0,
+      //     sort: 0,
+      //     creater: null,
+      //     updator: null,
+      //     value: []
+      //   },
+      //   {
+      //     id: 1014,
+      //     specColleId: 1005,
+      //     name: '高(cm)',
+      //     type: 0,
+      //     sort: 0,
+      //     creater: null,
+      //     updator: null,
+      //     value: [
+      //       {
+      //         id: 1012,
+      //         specColleId: 1005,
+      //         specId: 1014,
+      //         value: 'a'
+      //       },
+      //       {
+      //         id: 1013,
+      //         specColleId: 1005,
+      //         specId: 1014,
+      //         value: 'b'
+      //       },
+      //       {
+      //         id: 1014,
+      //         specColleId: 1005,
+      //         specId: 1014,
+      //         value: 'c'
+      //       }
+      //     ]
+      //   },
+      //   {
+      //     id: 1016,
+      //     specColleId: 1005,
+      //     name: 'test',
+      //     type: 1,
+      //     sort: 1,
+      //     creater: 'ADMIN:admin',
+      //     updator: 'ADMIN:admin',
       //     value: []
       //   }
       // ]
