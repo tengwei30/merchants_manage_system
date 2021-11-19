@@ -36,7 +36,7 @@ export const publish = (params: {}) => {
  * YApi: http://yapi.yufu.cn:18094/project/9/interface/api/1731
  * 商户中心商品相关api接口
  */
-export const pageByCondition = (params: {}) => {
+export const pageByCondition = (params?: {}) => {
   return post({
     url: '/merchant/goods/page-by-condition',
     data: params

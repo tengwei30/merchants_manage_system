@@ -25,68 +25,68 @@ const Category = () => {
     console.log('Failed:', errorInfo)
   }
   const initData = async () => {
-    // const result: any = await getAllCategory()
-    // if ((result.code = '000000')) {
-    //   setOptions(result.data)
-    // }
     //启用假数据
-    const optionsData: object[] = [
-      {
-        id: '003',
-        parentId: null,
-        specCollId: 1002,
-        value: '衣服',
-        label: '衣服',
-        level: 1,
-        sort: 0,
-        status: 1,
-        creater: null,
-        updator: null,
-        children: [
-          {
-            id: '003001',
-            parentId: '003',
-            specCollId: 1002,
-            value: '上衣',
-            label: '上衣',
-            level: 2,
-            sort: 0,
-            status: 1,
-            creater: null,
-            updator: null,
-            children: [
-              {
-                id: '003001001',
-                parentId: '003001',
-                specCollId: 1002,
-                value: '卫衣',
-                label: '卫衣',
-                level: 3,
-                sort: 0,
-                status: 1,
-                creater: null,
-                updator: null,
-                children: undefined
-              }
-            ]
-          },
-          {
-            id: '003002',
-            parentId: '003',
-            specCollId: 1002,
-            value: '裤子',
-            label: '裤子',
-            level: 2,
-            sort: 0,
-            status: 1,
-            creater: null,
-            updator: null,
-            children: undefined
-          }
-        ]
-      }
-    ]
-    setOptions(optionsData)
+    // const optionsData: object[] = [
+    //   {
+    //     id: '003',
+    //     parentId: null,
+    //     specCollId: 1002,
+    //     value: '衣服',
+    //     label: '衣服',
+    //     level: 1,
+    //     sort: 0,
+    //     status: 1,
+    //     creater: null,
+    //     updator: null,
+    //     children: [
+    //       {
+    //         id: '003001',
+    //         parentId: '003',
+    //         specCollId: 1002,
+    //         value: '上衣',
+    //         label: '上衣',
+    //         level: 2,
+    //         sort: 0,
+    //         status: 1,
+    //         creater: null,
+    //         updator: null,
+    //         children: [
+    //           {
+    //             id: '003001001',
+    //             parentId: '003001',
+    //             specCollId: 1002,
+    //             value: '卫衣',
+    //             label: '卫衣',
+    //             level: 3,
+    //             sort: 0,
+    //             status: 1,
+    //             creater: null,
+    //             updator: null,
+    //             children: undefined
+    //           }
+    //         ]
+    //       },
+    //       {
+    //         id: '003002',
+    //         parentId: '003',
+    //         specCollId: 1002,
+    //         value: '裤子',
+    //         label: '裤子',
+    //         level: 2,
+    //         sort: 0,
+    //         status: 1,
+    //         creater: null,
+    //         updator: null,
+    //         children: undefined
+    //       }
+    //     ]
+    //   }
+    // ]
+    // setOptions(optionsData)
+    const result: any = await getAllCategory()
+    if ((result.code = '000000')) {
+      setOptions(result.data)
+    }
   }
   useEffect(() => {
     initData()

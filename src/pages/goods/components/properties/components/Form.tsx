@@ -45,6 +45,7 @@ import useDeepCompareEffect from 'use-deep-compare-effect'
 import SkuTable from './SkuTable'
 import Item from 'antd/lib/list/Item'
 import { setExpressRegion } from '../../../../../store/actions/order.actions'
+import { ListSpec, SubListSpec, ListSpecServer } from '../../../../../store/models/goods'
 const { Option } = Select
 const layout = {
   labelCol: { span: 3 },
@@ -53,22 +54,23 @@ const layout = {
 const tailLayout = {
   wrapperCol: { offset: 8, span: 16 }
 }
-interface subListSpec {
-  id: number
-  specColleId: number
-  specId: number
-  value: string
-}
-interface ListSpec {
-  creater: string
-  id: number
-  name: string
-  sort: number
-  specColleId: number
-  type: number
-  updator: string
-  value: subListSpec[]
-}
+// interface subListSpec {
+//   id?: number
+//   specColleId: number
+//   specId: number
+//   value: string
+// }
+// interface ListSpec {
+//   creater: string | null
+//   id: number
+//   name: string
+//   sort: number
+//   specColleId: number
+//   type: number
+//   updator: string | null
+//   value: subListSpec[]
+//   [propName: string]: any
+// }
 //定义添加规格值from表单参数接口--sku相关
 interface SkuFormProps {
   visible: boolean
@@ -131,6 +133,7 @@ const GoodsForm = ({ actionType }: any, ref: any) => {
   const [listSpec, setListSpec] = useState([] as ListSpec[]) //规格--销售属性
   const [normalListSpec, setNormalListSpec] = useState([] as ListSpec[]) //规格--普通属性
   const [brands, setBrands] = useState([]) //商品品牌集
+  const [payTypeData, setPayTypeData] = useState([])
   const [payPlainOptions, setPayPlainOptions] = useState([] as string[])
   const [payCheckedList, setPayCheckedList] = useState([] as string[])
   const [payCheckAll, setPayCheckAll] = useState(false)
@@ -294,25 +297,35 @@ const GoodsForm = ({ actionType }: any, ref: any) => {
   }
   //返回商品普通属性UI
   const normalListSpecFormList = () => {
-    // console.log('field===2222====', normalListSpec)
-    const subUI = (key: number) => {
-      const values = normalListSpec[key].value
-      if (normalListSpec[key].value.length) {
-        return (
-          <Select style={{ width: 200 }}>
-            {values.map((item, index) => {
-              console.log(item)
-              return (
-                <Option key={item.id} value={item.id}>
-                  {item.value}
-                </Option>
-              )
-            })}
-          </Select>
-        )
-      } else {
-        return <Input />
+    interface NormalSpecProps {
+      data: ListSpec
+    }
+    const SelectUI: React.FC<NormalSpecProps> = ({ data }) => {
+      const onSelectChange = (value: string, option: any): void => {
+        const targetIndex = normalListSpec.findIndex((item) => {
+          return item.id === data.id
+        })
+        const newNormalListSpec = form.getFieldValue('normalListSpec')
+        newNormalListSpec[targetIndex].targetValue = value
+        form.setFieldsValue({ normalListSpec: newNormalListSpec })
       }
+      console.log('data.value======', data.value)
+      const values: SubListSpec[] = data.value
+      return (
+        <Select style={{ width: 200 }} onChange={onSelectChange}>
+          {values.map((item: any) => {
+            return (
+              <Option key={item.id} value={item.value}>
+                {item.value}
+              </Option>
+            )
+          })}
+        </Select>
+      )
+    }
+    const subUI = (key: any) => {
+      const data: ListSpec = normalListSpec[key]
+      return data.value.length ? <SelectUI data={data as ListSpec} /> : <Input />
     }
     return (
       <Form.List name={'normalListSpec'}>
@@ -326,7 +339,13 @@ const GoodsForm = ({ actionType }: any, ref: any) => {
                   style={{ width: '100%', display: 'block', marginRight: 30 }}
                   align="baseline"
                 >
-                  <Form.Item label={normalListSpec[field.key].name} rules={[{ required: true }]}>
+                  <Form.Item
+                    key={field.key}
+                    name={[field.name, 'value']}
+                    label={normalListSpec[field.key].name}
+                    fieldKey={[field.fieldKey, 'value']}
+                    rules={[{ required: true }]}
+                  >
                     {subUI(field.key)}
                   </Form.Item>
                 </Space>
@@ -383,8 +402,33 @@ const GoodsForm = ({ actionType }: any, ref: any) => {
       </Form.List>
     )
   }
+  interface PayType {
+    key: number
+    value: string
+  }
   const onSave = async (values: any) => {
     console.log('values=====', values)
+    let payType: PayType[] = []
+    payCheckedList.map((item) => {
+      let targetData: any = {}
+      targetData = payTypeData.find((data: PayType) => {
+        return data.value === item
+      })
+      targetData && payType.push(targetData.key)
+    })
+    //格式化 merchantGoodsSkuSpecValueReqList 数据格式
+    let merchantGoodsSkuSpecValueReqList: ListSpecServer[] = []
+    values.normalListSpec.map((item: ListSpec) => {
+      const subData: ListSpecServer = {
+        name: item.name,
+        specColleId: item.specColleId,
+        specId: item.id,
+        type: item.type,
+        value: item.targetValue ? item.targetValue : item.value
+      }
+      merchantGoodsSkuSpecValueReqList.push(subData)
+    })
+    console.log('merchantGoodsSkuSpecValueReqList=====', merchantGoodsSkuSpecValueReqList)
     const data = {
       brandId: values.brandId,
       categoryId: goods.category.id,
@@ -393,12 +437,12 @@ const GoodsForm = ({ actionType }: any, ref: any) => {
         'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png'
       ],
       desciption: values.desciption,
-      expressTemplateId: values.expressTemplateId, //
+      expressTemplateId: values.expressTemplateId || '', //
       expressType: values.expressType,
-      fixedExpressPrice: values.fixedExpressPrice,
+      fixedExpressPrice: values.fixedExpressPrice || '',
       headImageUrl: 'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png',
       id: '',
-      ifSuperimposed: values.ifSuperimposed,
+      ifSuperimposed: values.ifSuperimposed ? values.ifSuperimposed[0] : '',
       keyword: values.keyword,
       merchantGoodsImgsReqList: [
         {
@@ -406,32 +450,38 @@ const GoodsForm = ({ actionType }: any, ref: any) => {
           url: 'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png'
         }
       ],
-      merchantGoodsSkuReqList: goods.skuList, //[...]
-      merchantGoodsSkuSpecValueReqList: normalListSpec, //[...]
+      merchantGoodsSkuReqList: goods.skuList,
+      merchantGoodsSkuSpecValueReqList,
       name: values.name,
-      payType: payCheckedList, //[]
+      payType: payType,
       title: values.title,
       type: values.type,
       unit: values.unit
     }
     console.log('data======', data)
-    // const result = await publish(data)
+    const result = await publish(data)
   }
   //form表单提交方法
   const onFormFinish = (name: string, { values, forms }: any) => {
-    console.log('forms====', forms)
+    // console.log('forms====', forms)
     if (name === 'skuForm') {
       const { basicForm, skuForm } = forms
       let listSpec = basicForm.getFieldValue('listSpec') || []
-      // const sku = skuForm.getFieldValue('skuValue') || ''
-      // let currentSpecValue = listSpec[specKey].value
-      // console.log('currentSpecValue=======')
-      // console.log(currentSpecValue)
-      // currentSpecValue.push(Object.assign({}, currentSpecValue[0], { id: '', value: sku }))
-      // basicForm.setFieldsValue({ listSpec })
-      // console.log(basicForm.getFieldValue('listSpec'))
-      // listSpec = basicForm.getFieldValue('listSpec') || []
-      // console.log('listSpec===form====', listSpec)
+      const sku = skuForm.getFieldValue('skuValue') || ''
+      const specData = listSpec[specKey]
+      let currentSpecValue = listSpec[specKey].value
+      console.log('listSpec[specKey]=======', listSpec[specKey])
+      console.log('currentSpecValue=======', currentSpecValue)
+      currentSpecValue.push(
+        Object.assign({}, currentSpecValue[0], {
+          id: '',
+          value: sku,
+          name: specData.name,
+          specColleId: specData.specColleId,
+          specId: specData.id
+        })
+      )
+      basicForm.setFieldsValue({ listSpec })
       const newListSpec = [...listSpec]
       setListSpec(newListSpec)
       setSkuFormVisible(false)
@@ -441,7 +491,6 @@ const GoodsForm = ({ actionType }: any, ref: any) => {
       onSave(values)
     }
   }
-  //根据分类获取规格
   const initData = async () => {
     const brandResult: any = await brandList()
     if (brandResult.code === '000000') {
@@ -449,9 +498,11 @@ const GoodsForm = ({ actionType }: any, ref: any) => {
     }
     const payResult: any = await payTypes()
     if (payResult.code === '000000') {
+      setPayTypeData(payResult.data)
+      let serverData = [...payResult.data]
       let plainOptions: string[] = []
-      payResult.data.shift()
-      payResult.data.map((item: any) => {
+      serverData.shift()
+      serverData.map((item: any) => {
         plainOptions.push(item.value as string)
       })
       setPayPlainOptions(plainOptions)
@@ -467,129 +518,253 @@ const GoodsForm = ({ actionType }: any, ref: any) => {
     })
     if (result.code === '000000') {
       // const newData = result.data
+
       //假数据
-      const newData = [
+      const newData: ListSpec[] = [
         {
-          creater: '',
-          id: 2,
-          name: '颜色',
-          sort: 0,
-          specColleId: 1,
-          type: 1,
-          updator: '',
-          value: [
-            {
-              id: 201,
-              specColleId: 1,
-              specId: 2,
-              value: '黑色'
-            },
-            {
-              id: 202,
-              specColleId: 1,
-              specId: 2,
-              value: '红色'
-            }
-          ]
-        },
-        {
-          creater: '',
-          id: 3,
-          name: '尺码',
-          sort: 0,
-          specColleId: 1,
-          type: 1,
-          updator: '',
-          value: [
-            {
-              id: 301,
-              specColleId: 1,
-              specId: 3,
-              value: 'S'
-            },
-            {
-              id: 302,
-              specColleId: 1,
-              specId: 3,
-              value: 'M'
-            },
-            {
-              id: 303,
-              specColleId: 1,
-              specId: 3,
-              value: 'L'
-            }
-          ]
-        },
-        {
-          creater: '',
-          id: 4,
+          id: 1009,
+          specColleId: 1005,
           name: '内存',
-          sort: 0,
-          specColleId: 1,
           type: 1,
-          updator: '',
+          sort: 9,
+          creater: null,
+          updator: null,
           value: [
             {
-              id: 400,
-              specColleId: 1,
-              specId: 4,
-              value: '126G'
+              id: 1009,
+              specColleId: 1005,
+              specId: 1009,
+              value: '64G'
             },
             {
-              id: 401,
-              specColleId: 1,
-              specId: 4,
-              value: '256G'
+              id: 1010,
+              specColleId: 1005,
+              specId: 1009,
+              value: '128G'
             },
             {
-              id: 402,
-              specColleId: 1,
-              specId: 4,
-              value: '516G'
+              id: 1011,
+              specColleId: 1005,
+              specId: 1009,
+              value: '32G'
             }
           ]
         },
         {
-          creater: '',
-          id: 5,
-          name: '材质',
-          sort: 0,
-          specColleId: 1,
-          type: 0,
-          updator: '',
+          id: 1010,
+          specColleId: 1005,
+          name: '颜色',
+          type: 1,
+          sort: 9,
+          creater: null,
+          updator: null,
           value: [
             {
-              id: 500,
-              specColleId: 1,
-              specId: 5,
-              value: '红木'
+              id: 1007,
+              specColleId: 1005,
+              specId: 1010,
+              value: '红'
             },
             {
-              id: 501,
-              specColleId: 1,
-              specId: 5,
-              value: '橡木'
-            },
-            {
-              id: 502,
-              specColleId: 1,
-              specId: 5,
-              value: '谭木'
+              id: 1008,
+              specColleId: 1005,
+              specId: 1010,
+              value: '蓝'
             }
           ]
         },
         {
-          creater: '',
-          id: 6,
-          name: '质检标准',
-          sort: 0,
-          specColleId: 1,
+          id: 1011,
+          specColleId: 1005,
+          name: '重量(kg)',
           type: 0,
-          updator: '',
+          sort: 0,
+          creater: null,
+          updator: null,
+          value: []
+        },
+        {
+          id: 1012,
+          specColleId: 1005,
+          name: '长(cm)',
+          type: 0,
+          sort: 0,
+          creater: null,
+          updator: null,
+          value: []
+        },
+        {
+          id: 1013,
+          specColleId: 1005,
+          name: '宽(cm)',
+          type: 0,
+          sort: 0,
+          creater: null,
+          updator: null,
+          value: []
+        },
+        {
+          id: 1014,
+          specColleId: 1005,
+          name: '高(cm)',
+          type: 0,
+          sort: 0,
+          creater: null,
+          updator: null,
+          value: [
+            {
+              id: 1012,
+              specColleId: 1005,
+              specId: 1014,
+              value: 'a'
+            },
+            {
+              id: 1013,
+              specColleId: 1005,
+              specId: 1014,
+              value: 'b'
+            },
+            {
+              id: 1014,
+              specColleId: 1005,
+              specId: 1014,
+              value: 'c'
+            }
+          ]
+        },
+        {
+          id: 1016,
+          specColleId: 1005,
+          name: 'test',
+          type: 1,
+          sort: 1,
+          creater: 'ADMIN:admin',
+          updator: 'ADMIN:admin',
           value: []
         }
       ]
+      // const newData = [
+      //   {
+      //     creater: '',
+      //     id: 2,
+      //     name: '颜色',
+      //     sort: 0,
+      //     specColleId: 1,
+      //     type: 1,
+      //     updator: '',
+      //     value: [
+      //       {
+      //         id: 201,
+      //         specColleId: 1,
+      //         specId: 2,
+      //         value: '黑色'
+      //       },
+      //       {
+      //         id: 202,
+      //         specColleId: 1,
+      //         specId: 2,
+      //         value: '红色'
+      //       }
+      //     ]
+      //   },
+      //   {
+      //     creater: '',
+      //     id: 3,
+      //     name: '尺码',
+      //     sort: 0,
+      //     specColleId: 1,
+      //     type: 1,
+      //     updator: '',
+      //     value: [
+      //       {
+      //         id: 301,
+      //         specColleId: 1,
+      //         specId: 3,
+      //         value: 'S'
+      //       },
+      //       {
+      //         id: 302,
+      //         specColleId: 1,
+      //         specId: 3,
+      //         value: 'M'
+      //       },
+      //       {
+      //         id: 303,
+      //         specColleId: 1,
+      //         specId: 3,
+      //         value: 'L'
+      //       }
+      //     ]
+      //   },
+      //   {
+      //     creater: '',
+      //     id: 4,
+      //     name: '内存',
+      //     sort: 0,
+      //     specColleId: 1,
+      //     type: 1,
+      //     updator: '',
+      //     value: [
+      //       {
+      //         id: 400,
+      //         specColleId: 1,
+      //         specId: 4,
+      //         value: '126G'
+      //       },
+      //       {
+      //         id: 401,
+      //         specColleId: 1,
+      //         specId: 4,
+      //         value: '256G'
+      //       },
+      //       {
+      //         id: 402,
+      //         specColleId: 1,
+      //         specId: 4,
+      //         value: '516G'
+      //       }
+      //     ]
+      //   },
+      //   {
+      //     creater: '',
+      //     id: 5,
+      //     name: '材质',
+      //     sort: 0,
+      //     specColleId: 1,
+      //     type: 0,
+      //     updator: '',
+      //     value: [
+      //       {
+      //         id: 500,
+      //         specColleId: 1,
+      //         specId: 5,
+      //         value: '红木'
+      //       },
+      //       {
+      //         id: 501,
+      //         specColleId: 1,
+      //         specId: 5,
+      //         value: '橡木'
+      //       },
+      //       {
+      //         id: 502,
+      //         specColleId: 1,
+      //         specId: 5,
+      //         value: '谭木'
+      //       }
+      //     ]
+      //   },
+      //   {
+      //     creater: '',
+      //     id: 6,
+      //     name: '质检标准',
+      //     sort: 0,
+      //     specColleId: 1,
+      //     type: 0,
+      //     updator: '',
+      //     value: []
+      //   }
+      // ]
       let listSpecData: ListSpec[] = []
       let normalListSpecData: ListSpec[] = []
       newData.map((item: ListSpec) => {
@@ -606,15 +781,15 @@ const GoodsForm = ({ actionType }: any, ref: any) => {
   useEffect(() => {
     initData()
   }, [])
-  useEffect(() => {
-    form.setFieldsValue({ listSpec, normalListSpec })
-  }, [listSpec.length])
   useEffect(() => {}, [payPlainOptions.length])
   useDeepCompareEffect(() => {
-    console.log('更新==object=======')
+    form.setFieldsValue({ listSpec })
   }, [listSpec])
-  console.log('ListSpec==111==', listSpec)
-  // console.log('goods=====', goods)
+  useDeepCompareEffect(() => {
+    form.setFieldsValue({ normalListSpec })
+  }, [normalListSpec])
+  // console.log('ListSpec==111==', listSpec)
+  // console.log('payTypeData=====', payTypeData)
   return (
     <Form.Provider
       onFormFinish={onFormFinish}
@@ -633,6 +808,14 @@ const GoodsForm = ({ actionType }: any, ref: any) => {
             const newListSpec = [...listSpec]
             setListSpec(newListSpec)
           }
+          // if (field.name[0] === 'normalListSpec') {
+          //   const { basicForm } = forms
+          //   const normalListSpec = basicForm.getFieldValue('normalListSpec') || []
+          //   console.log('normalListSpec========', normalListSpec)
+          //   // console.log('listSpec=======form ======', listSpec)
+          //   const newNormalListSpec = [...normalListSpec]
+          //   setListSpec(newNormalListSpec)
+          // }
         }
       }}
     >

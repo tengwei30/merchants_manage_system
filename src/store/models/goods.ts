@@ -26,3 +26,27 @@ export interface SkuList {
   stock: number
   [propName: string]: any
 }
+export interface SubListSpec {
+  id?: number
+  specColleId: number
+  specId: number
+  value: string
+}
+export interface ListSpec {
+  creater: string | null
+  id: number
+  name: string
+  sort: number
+  specColleId: number
+  type: number
+  updator: string | null
+  value: SubListSpec[]
+  [propName: string]: any
+}
+export interface ListSpecServer {
+  specColleId: number
+  specId: number
+  value: string
+  type: number
+  name: string
+}
