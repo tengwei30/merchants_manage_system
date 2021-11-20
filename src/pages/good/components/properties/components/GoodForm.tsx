@@ -1,10 +1,65 @@
-import { useState, useRef, forwardRef, useImperativeHandle } from 'react'
-import { Form, Row, Col, Input, Button, Select, Upload, message, Modal } from 'antd'
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons'
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
+import {
+  Form,
+  Row,
+  Col,
+  Input,
+  Button,
+  Select,
+  Upload,
+  message,
+  Modal,
+  Space,
+  Avatar,
+  Typography
+} from 'antd'
+import {
+  LoadingOutlined,
+  PlusOutlined,
+  MinusCircleOutlined,
+  SmileOutlined,
+  UserOutlined
+} from '@ant-design/icons'
+import { FormInstance } from 'antd/lib/form'
 import BraftEditor from 'braft-editor'
 import 'braft-editor/dist/index.css'
 import styles from '../components/Form.module.css'
-// import { RSA_NO_PADDING } from 'constants'
+const data = [
+  {
+    creater: '',
+    id: 1,
+    name: '颜色',
+    sort: 0,
+    specColleId: 10,
+    type: 1,
+    updator: '',
+    value: [
+      {
+        id: 1,
+        specColleId: 10,
+        specId: 2,
+        value: '白色'
+      }
+    ]
+  },
+  {
+    creater: '',
+    id: 2,
+    name: '尺寸',
+    sort: 0,
+    specColleId: 12,
+    type: 1,
+    updator: '',
+    value: [
+      {
+        id: 2,
+        specColleId: 12,
+        specId: 3,
+        value: 'L'
+      }
+    ]
+  }
+]
 const { Option } = Select
 const layout = {
   labelCol: { span: 3 },
@@ -40,13 +95,58 @@ function beforeUpload(file: any) {
   }
   return isJpgOrPng && isLt2M
 }
+//sku相关
+// interface SkuType {
+//   skuValue: string
+// }
+interface SkuFormProps {
+  visible: boolean
+  onCancel: () => void
+}
+// reset form fields when modal is form, closed
+const useResetFormOnCloseModal = ({ form, visible }: { form: FormInstance; visible: boolean }) => {
+  const prevVisibleRef = useRef<boolean>()
+  useEffect(() => {
+    prevVisibleRef.current = visible
+  }, [visible])
+  const prevVisible = prevVisibleRef.current
 
-const GoodForm = (props: any, ref: any) => {
+  useEffect(() => {
+    if (!visible && prevVisible) {
+      form.resetFields()
+    }
+  }, [visible])
+}
+//添加sku值的form表单
+const SkuForm: React.FC<SkuFormProps> = ({ visible, onCancel }) => {
+  const [form] = Form.useForm()
+  useResetFormOnCloseModal({
+    form,
+    visible
+  })
+  const onOk = () => {
+    form.submit()
+  }
+  return (
+    <Modal title="添加规格值" visible={visible} onOk={onOk} onCancel={onCancel}>
+      <Form form={form} name="skuForm">
+        <Form.Item
+          name="skuValue"
+          style={{ width: '40%', display: 'inline-block', marginRight: '10px' }}
+        >
+          <Input />
+        </Form.Item>
+      </Form>
+    </Modal>
+  )
+}
+//基础form表单
+const GoodForm = ({ actionType, listSpec = {} }: any, ref: any) => {
   // 设置编辑器初始内容
   const [editorState, setEditorState] = useState(BraftEditor.createEditorState('<p></p>'))
   const [sort, setSort] = useState('美妆>护肤品>官方直售')
   const [expressTemplate, setExpressTemplate] = useState('运费模版')
-  const [loading, setLoading] = useState(false)
+  // const [loading, setLoading] = useState(false)
   const [imageUrl, setImageUrl] = useState('')
   const [mainFile, setMainFile] = useState([]) //已上传的主图片
   const [files, setFiles] = useState([]) //已上传的图片列表
@@ -56,6 +156,7 @@ const GoodForm = (props: any, ref: any) => {
     previewTitle: ''
   }) //图片预览
   // const [previewVisible, setPreviewVisible] = useState(false) //是否显示图片预览弹窗
+  const [specKey, setSpecKey] = useState(NaN) //当前操作的规格数组下标
   const [form] = Form.useForm()
   //表单提交方法
   const onFinish = (values: any) => {
@@ -81,16 +182,18 @@ const GoodForm = (props: any, ref: any) => {
   //主图片上传
   const handleMainUploadChange = (info: any) => {
     if (info.file.status === 'uploading') {
-      setLoading(true)
+      // setLoading(true)
       return
     }
+    console.log(info.file)
     if (info.file.status === 'done') {
       // Get this url from response in real world.
-      getBase64(info.file.originFileObj, (imageUrl: string) => {
-        setLoading(false)
-        setImageUrl(imageUrl)
-        // setMainFile(info.fileList)
-      })
+      // getBase64(info.file.originFileObj, (imageUrl: string) => {
+      //   // setImageUrl(imageUrl)
+      // })
+      console.log(info.fileList)
+      // setLoading(false)
+      setMainFile(info.fileList)
     }
   }
   //非主图片上传
@@ -119,18 +222,87 @@ const GoodForm = (props: any, ref: any) => {
   }
   const uploadButton = (
     <div>
-      {loading ? <LoadingOutlined /> : <PlusOutlined />}
+      <PlusOutlined />
       <div style={{ marginTop: 8 }}>上传图片</div>
     </div>
   )
+  //sku相关--start
+  const [skuFormVisible, setSkuFormVisible] = useState(false)
+
+  const showSkuForm = (key: number) => {
+    setSpecKey(key) //保存当前操作的规格数组下标
+    setSkuFormVisible(true)
+  }
+
+  const hideSkuForm = () => {
+    setSkuFormVisible(false)
+  }
+  //商品规格UI
+  const listSpecFormList = () => {
+    return (
+      <Form.List name={'listSpec'}>
+        {(fields) => (
+          <>
+            {fields.map((field) => (
+              <Space key={field.key} style={{ width: '100%', marginRight: 30 }} align="baseline">
+                <Form.Item label={listSpec[field.key].name}>
+                  <Form.List name={[field.name, 'value']}>
+                    {(subFields, { add, remove }) => (
+                      <>
+                        {subFields.map(({ key, name, fieldKey, ...restField }) => (
+                          <Space
+                            key={key}
+                            style={{ width: '13%', marginRight: 30 }}
+                            align="baseline"
+                          >
+                            <Form.Item
+                              {...restField}
+                              name={[name, 'value']}
+                              fieldKey={[fieldKey, 'value']}
+                            >
+                              <Input />
+                            </Form.Item>
+                            <MinusCircleOutlined onClick={() => remove(name)} />
+                          </Space>
+                        ))}
+                        <Form.Item style={{ width: '20%', display: 'inline-block' }}>
+                          <Button onClick={() => showSkuForm(field.key)}>+添加规格值</Button>
+                        </Form.Item>
+                      </>
+                    )}
+                  </Form.List>
+                </Form.Item>
+              </Space>
+            ))}
+          </>
+        )}
+      </Form.List>
+    )
+  }
+  //sku相关--end
   return (
-    <Form
-      {...layout}
-      form={form}
-      name="control-hooks"
-      validateMessages={validateMessages}
-      onFinish={onFinish}
+    <Form.Provider
+      onFormFinish={(name, { values, forms }) => {
+        if (name === 'skuForm') {
+          const { basicForm, skuForm } = forms
+          const listSpec = basicForm.getFieldValue('listSpec') || []
+          const sku = skuForm.getFieldValue('skuValue') || ''
+          console.log(sku)
+          const currentSpecValue = listSpec[specKey].value
+          console.log(currentSpecValue.push({ ...currentSpecValue[0], value: sku, id: '' }))
+          console.log(currentSpecValue)
+          console.log('292')
+          basicForm.setFieldsValue({ listSpec })
+          // console.log(values)
+          setSkuFormVisible(false)
+        }
+        if (name === 'basicForm') {
+          console.log('237')
+          console.log(values)
+        }
+      }}
     >
+<<<<<<< HEAD:src/pages/good/components/properties/components/GoodForm.tsx
       <div className={styles.basic}>
         <h2>商品基本信息</h2>
         <div className={styles.content}>
@@ -301,14 +473,55 @@ const GoodForm = (props: any, ref: any) => {
               </Form.Item>
             </Col>
           </Row>
+=======
+      <Form
+        {...layout}
+        form={form}
+        name="basicForm"
+        initialValues={{
+          listSpec
+        }}
+        validateMessages={validateMessages}
+        onFinish={onFinish}
+      >
+        <div className={styles.basic}>
+          <h2>商品基本信息</h2>
+          <div className={styles.content}>
+            <Form.Item style={{ width: '100%' }}>{listSpecFormList()}</Form.Item>
+            {/* <Form.Item label="颜色">
+              <Form.List name="skus">
+                {(fields, { add, remove }) => (
+                  <>
+                    {fields.map(({ key, name, fieldKey, ...restField }) => (
+                      <Space key={key} style={{ width: '12%', marginRight: 30 }} align="baseline">
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'skuValue']}
+                          fieldKey={[fieldKey, 'skuValue']}
+                        >
+                          <Input />
+                        </Form.Item>
+                        <MinusCircleOutlined onClick={() => remove(name)} />
+                      </Space>
+                    ))}
+                    <Form.Item style={{ width: '20%', display: 'inline-block' }}>
+                      <Button onClick={showSkuForm}>+添加规格值</Button>
+                    </Form.Item>
+                  </>
+                )}
+              </Form.List>
+            </Form.Item> */}
+          </div>
+>>>>>>> bde4db23a3e5c4b2ee001dc20b138420ffe8c1d6:src/pages/good/components/properties/components/Form.tsx
         </div>
-      </div>
-      <Form.Item {...tailLayout}>
-        <Button type="primary" htmlType="submit">
-          确定
-        </Button>
-      </Form.Item>
-    </Form>
+        <Form.Item {...tailLayout}>
+          <Button type="primary" htmlType="submit">
+            确定
+          </Button>
+        </Form.Item>
+      </Form>
+      <SkuForm visible={skuFormVisible} onCancel={hideSkuForm} />
+    </Form.Provider>
   )
 }
 export default GoodForm

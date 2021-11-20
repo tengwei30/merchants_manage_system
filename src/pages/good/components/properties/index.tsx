@@ -8,13 +8,12 @@
  */
 import { useState, useRef, forwardRef, useImperativeHandle } from 'react'
 import { Form, Row, Col, Input, Button, Cascader } from 'antd'
-import GoodForm from './components/GoodForm'
+import GoodForm from '../properties/components/Form'
 // import './index.css'
-const Properties = ({ actionType }: any) => {
-  console.log(actionType)
+const Properties = ({ actionType, listSpec = {} }: any) => {
   return (
     <div>
-      <GoodForm />
+      <GoodForm actionType={actionType} listSpec={listSpec} />
     </div>
   )
 }

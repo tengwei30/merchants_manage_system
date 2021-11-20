@@ -1,8 +1,6 @@
 import React, { FC } from 'react'
 import { Layout, Menu } from 'antd'
-import { Link } from 'react-router-dom'
-
-import { withRouter, RouteComponentProps, useHistory } from 'react-router-dom'
+import { Link, withRouter, RouteComponentProps, useHistory } from 'react-router-dom'
 
 import { menus, getDefaultOpenKey } from '../helpers/routerMethods'
 

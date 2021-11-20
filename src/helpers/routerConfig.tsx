@@ -1,10 +1,17 @@
-import { UserOutlined, LaptopOutlined } from '@ant-design/icons'
+import { UserOutlined, LaptopOutlined, TagsOutlined, ToolOutlined } from '@ant-design/icons'
 import Home from '../pages/home/index'
 import Publish from '../pages/good/publish/index'
 import Sale from '../pages/good/sale/index'
 import WareHouse from '../pages/good/warehouse/index'
 import Brand from '../pages/shops/brand/index'
 import Illegal from '../pages/good/illegal'
+import Order from '../pages/order/list/index'
+import Delivery from '../pages/order/delivery/index'
+import DeliverySet from '../pages/order/deliverySet/index'
+import Comment from '../pages/order/comment/index'
+import Refund from '../pages/afterSales/refund/index'
+import Exchange from '../pages/afterSales/exchange/index'
+import AddGood from '../pages/good/add-good'
 
 export interface SlideItem {
   name: string
@@ -48,6 +55,11 @@ export const slideBarConfig: SlideItem[] = [
         name: '违规商品列表',
         url: '/good/warehouse',
         component: WareHouse
+      },
+      {
+        name: '商品发布',
+        url: '/good/add-good',
+        component: AddGood
       }
     ]
   },
@@ -60,6 +72,50 @@ export const slideBarConfig: SlideItem[] = [
         name: '品牌授权',
         url: '/shops/brand',
         component: Brand
+      }
+    ]
+  },
+  {
+    name: '订单管理',
+    url: '/order',
+    icon: <TagsOutlined />,
+    children: [
+      {
+        name: '订单管理',
+        url: '/order/list',
+        component: Order
+      },
+      {
+        name: '发货',
+        url: '/order/delivery',
+        component: Delivery
+      },
+      {
+        name: '发货设置',
+        url: '/order/deliverySet',
+        component: DeliverySet
+      },
+      {
+        name: '评价管理',
+        url: '/order/comment',
+        component: Comment
+      }
+    ]
+  },
+  {
+    name: '售后服务',
+    url: '/afterSales',
+    icon: <ToolOutlined />,
+    children: [
+      {
+        name: '退款记录',
+        url: '/afterSales/refund',
+        component: Refund
+      },
+      {
+        name: '退货记录',
+        url: '/afterSales/exchange',
+        component: Exchange
       }
     ]
   }

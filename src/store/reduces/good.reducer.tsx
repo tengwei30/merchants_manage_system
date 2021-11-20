@@ -1,48 +1,27 @@
-import { AuthUnionType } from '../actions/auth.actions'
+import { GoodUnionType } from '../actions/good.actions'
 
-export interface AuthState {
-  signin: {
-    loaded: boolean
-    success: boolean
-    message: string
+export interface GoodState {
+  category: {
+    id: number
+    value: string
   }
 }
 
 const initState = {
-  signin: {
-    loaded: false,
-    success: false,
-    message: ''
+  category: {
+    id: NaN,
+    value: ''
   }
 }
 
-export default function authReducer(state: AuthState = initState, action: AuthUnionType) {
+export default function GoodReducer(state: GoodState = initState, action: GoodUnionType) {
   switch (action.type) {
-    case 'SIGNIN':
+    case 'SET_CATEGORY':
       return {
         ...state,
-        signin: {
-          loaded: false,
-          success: false,
-          message: ''
-        }
-      }
-    case 'SIGNIN_SUCCESS':
-      return {
-        ...state,
-        signin: {
-          loaded: true,
-          success: true,
-          message: ''
-        }
-      }
-    case 'SIGNIN_FAIL':
-      return {
-        ...state,
-        signin: {
-          loaded: true,
-          success: false,
-          message: action.message
+        category: {
+          id: action.id,
+          value: action.value
         }
       }
     default:
