@@ -1,0 +1,20 @@
+.province{
+  position: relative;
+  padding: 10px;
+}
+.province-on{
+  background: #f1f1f1;
+}
+.province .cities{
+  width: 290px;
+  background-color: #f1f1f1;
+  position: absolute;
+  z-index: 10;
+  top: 33px;
+  left: 0;
+  padding: 15px 10px;
+  display: none;
+}
+.province .cities-on{
+  display: block;
+}

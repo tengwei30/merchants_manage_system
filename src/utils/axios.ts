@@ -1,5 +1,5 @@
 import axios from 'axios'
-
+import { Redirect } from 'react-router'
 interface codeType {
   [key: string]: unknown
 }
@@ -33,15 +33,28 @@ axios.defaults.validateStatus = function (status) {
 //   // baseURL,
 //   // timeout
 // });
-
 // 请求拦截器
 axios.interceptors.request.use(
   (config) => {
     const configTemp = Object.create(config)
-    let token = window.localStorage.getItem('token')
-    if (token) {
-      configTemp.headers = Object.assign({}, configTemp.headers, JSON.parse(token))
-    }
+    let token: string | null = window.localStorage.getItem('token')
+    Object.assign(configTemp.headers, {
+      sessionId: token ? JSON.parse(token).sessionId : '',
+      'X-Client': JSON.stringify({
+        channelId: 1,
+        deviceId: 'x',
+        fixVersion: 1,
+        mainVersion: 1,
+        os: 'x',
+        platformId: 1,
+        pm: 'x',
+        screenSize: 'x',
+        sessionId: '',
+        signVersion: 1,
+        subVersion: 1,
+        systemVersion: 'x'
+      })
+    })
     configTemp.headers.common.eventTime = Date.now()
     // Do something before request is sent
     return configTemp
@@ -51,12 +64,13 @@ axios.interceptors.request.use(
 
 // 响应拦截器
 axios.interceptors.response.use(
-  (response) => {
+  (response: any) => {
     // 状态码为 2XX的都会走这
-    // if (response.data.errno === 777 || response.data.errno === 999 || response.data.errno === 555) {
-    // 这块需要重定向到 登录页面
-    // }
-    return response
+    if (response.data.code === '000004') {
+      window.location.href = ''
+      localStorage.removeItem('token')
+    }
+    return response.data
   },
   async (error) => {
     // 状态码 非 2XX的走这

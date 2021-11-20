@@ -1,0 +1,23 @@
+.basic{
+  border:solid 1px #F5F5F5;
+}
+.basic .content{
+  padding: 10px;
+}
+.basic h2{
+  font-size: 16px;
+  padding: 5px 10px;
+  background-color: #E7E7E7;
+}
+.tip{
+  color:red;
+  font-size: 14px;
+  margin-left: 140px;
+  margin-bottom: 10px
+}
+/* .basic .formItem input{ */
+  /* width: 100px; */
+  /* display: inline-block; */
+  /* margin-right: 10px */
+/* } */
+

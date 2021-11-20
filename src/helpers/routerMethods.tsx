@@ -11,6 +11,7 @@ const { SubMenu } = Menu
  */
 export const getMenu = (slideBarConfig: SlideItem[]) => {
   return slideBarConfig.map((item) => {
+    console.log(item.name, item.noSideItem)
     if (item.noSideItem) {
       return ''
     }
@@ -20,6 +21,8 @@ export const getMenu = (slideBarConfig: SlideItem[]) => {
           {item.children.map((inner) => {
             return inner.children && inner.children.length > 0 ? (
               getMenu(inner.children)
+            ) : inner.noSideItem ? (
+              ''
             ) : (
               <Menu.Item key={inner.url}>
                 <Link to={inner.url}>{inner.name}</Link>

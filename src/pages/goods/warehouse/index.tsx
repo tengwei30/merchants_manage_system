@@ -1,6 +1,6 @@
 import LayoutMenu from '../../../components/DashBoard'
-import Form from '../warehouse/components/Form'
-import List from '../warehouse/components/List'
+import Form from './components/Form'
+import List from './components/List'
 const WareHouse = () => {
   return (
     <LayoutMenu>

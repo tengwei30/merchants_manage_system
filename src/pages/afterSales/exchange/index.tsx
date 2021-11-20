@@ -5,7 +5,6 @@ import moment from 'moment'
 import 'moment/locale/zh-cn'
 moment.locale('zh-cn')
 import LayoutMenu from '../../../components/DashBoard'
-import { getDetail } from '../../../api/afterSales'
 import './index.css'
 const { RangePicker } = DatePicker
 const { Option } = Select
@@ -94,12 +93,6 @@ const rowSelection = {
     console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows)
   }
 }
-const fetchData = async () => {
-  getDetail().then((res: any) => {
-    console.log(res)
-  })
-}
-fetchData()
 const Exchange = () => {
   const [dataIns, setDataIns] = useState({ hits: [] })
   useEffect(() => {
